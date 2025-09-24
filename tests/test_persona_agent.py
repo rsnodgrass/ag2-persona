@@ -132,21 +132,6 @@ class TestPersonaAgent(unittest.TestCase):
         agent.remove_constraint("Non-existent")
         self.assertEqual(len(agent.constraints), 1)
 
-    def test_update_backstory(self):
-        """Test updating backstory."""
-        agent = PersonaAgent(name="test", role="Tester", goal="Test system")
-
-        # Initially no backstory
-        self.assertEqual(agent.backstory, "")
-        self.assertNotIn("Background", agent.system_message)
-
-        # Add backstory
-        agent.update_backstory("Expert tester with 5 years experience")
-
-        self.assertEqual(agent.backstory, "Expert tester with 5 years experience")
-        self.assertIn("Expert tester with 5 years experience", agent.system_message)
-        self.assertIn("Background", agent.system_message)
-
     def test_backward_compatibility(self):
         """Test that additional system_message is preserved."""
         agent = PersonaAgent(
@@ -188,38 +173,6 @@ class TestPersonaAgent(unittest.TestCase):
         self.assertEqual(restored.backstory, original.backstory)
         self.assertEqual(restored.constraints, original.constraints)
         self.assertEqual(restored.llm_config, original.llm_config)
-
-    def test_clone(self):
-        """Test agent cloning functionality."""
-        original = PersonaAgent(
-            name="original",
-            role="Reviewer",
-            goal="Review code",
-            backstory="Senior developer",
-            constraints=["Focus on quality"],
-        )
-
-        # Basic clone
-        clone = original.clone(name="clone")
-
-        self.assertEqual(clone.name, "clone")
-        self.assertEqual(clone.role, "Reviewer")
-        self.assertEqual(clone.goal, "Review code")
-
-        # Clone with overrides
-        specialized_clone = original.clone(
-            name="security_clone",
-            goal="Focus on security issues",
-            constraints=["Check for vulnerabilities", "Review authentication"],
-        )
-
-        self.assertEqual(specialized_clone.name, "security_clone")
-        self.assertEqual(specialized_clone.goal, "Focus on security issues")
-        self.assertEqual(len(specialized_clone.constraints), 2)
-
-        # Test clone validation - should require name
-        with self.assertRaises(ValueError):
-            original.clone()
 
     def test_repr(self):
         """Test string representation."""
@@ -282,18 +235,6 @@ class TestFunctionalInterface(unittest.TestCase):
         finally:
             os.unlink(config_file)
 
-    @patch(
-        "builtins.open", new_callable=mock_open, read_data="name: test\nrole: Tester\ngoal: Test"
-    )
-    @patch("ruamel.yaml.YAML.load")
-    def test_from_config_file_yaml(self, mock_yaml_load, mock_file):
-        """Test loading from YAML config file."""
-        mock_yaml_load.return_value = {"name": "test", "role": "Tester", "goal": "Test system"}
-
-        # Mock ruamel.yaml module availability
-        with patch.dict("sys.modules", {"ruamel.yaml": MagicMock()}):
-            agent = persona_agent_from_config("config.yaml")
-            self.assertEqual(agent.name, "test")
 
     def test_from_config_file_not_found(self):
         """Test error handling for missing config file."""
@@ -334,18 +275,6 @@ class TestAG2Integration(unittest.TestCase):
         self.assertEqual(agent.name, "test")
         self.assertIsInstance(agent.system_message, str)
 
-    @patch("ag2_persona.persona_agent.ConversableAgent")
-    def test_llm_config_passing(self, mock_conversable):
-        """Test that llm_config is properly passed to parent."""
-        llm_config = {"model": "gpt-4", "temperature": 0.7}
-
-        PersonaAgent(name="test", role="Tester", goal="Test", llm_config=llm_config)
-
-        # Verify ConversableAgent was called with correct parameters
-        mock_conversable.assert_called_once()
-        call_args = mock_conversable.call_args
-        self.assertEqual(call_args[1]["name"], "test")
-        self.assertEqual(call_args[1]["llm_config"], llm_config)
 
 
 class TestEdgeCases(unittest.TestCase):

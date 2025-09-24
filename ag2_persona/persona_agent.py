@@ -56,7 +56,7 @@ class PersonaAgent(ConversableAgent):
         goal: str,
         backstory: str = "",
         constraints: list[str] | None = None,
-        **kwargs,
+        **kwargs: Any,
     ):
         """
         Initialize a PersonaAgent.
@@ -214,7 +214,7 @@ def persona_agent(
     goal: str,
     backstory: str = "",
     constraints: list[str] | None = None,
-    **kwargs,
+    **kwargs: Any,
 ) -> PersonaAgent:
     """
     Create a PersonaAgent using a functional interface.
