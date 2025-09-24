@@ -389,24 +389,6 @@ Persona-based prompts improve LLM performance:
 3. **Consistent Outputs**: Constraints guide behavior
 4. **Easier Debugging**: Know exactly what each component does
 
-## Contributing to AG2
-
-This implementation is designed to be contributed to AG2:
-
-1. **Minimal footprint**: Single file, ~100 lines
-2. **No dependencies**: Uses only existing AG2 imports
-3. **Full compatibility**: Works with all AG2 features
-4. **Clear value**: Addresses common user pain points
-5. **Tested**: Includes comprehensive test suite
-
-To contribute:
-```bash
-# Fork AG2 repository
-# Add ag2_persona.py to autogen/agentchat/
-# Add tests to test/agentchat/
-# Submit PR with this README as documentation
-```
-
 ## FAQ
 
 **Q: Does this replace ConversableAgent?**
@@ -423,18 +405,6 @@ A: Yes, all ConversableAgent features including function calling work normally.
 
 **Q: How do I contribute improvements?**
 A: Submit PRs to enhance the structure while maintaining backward compatibility.
-
-## Summary
-
-PersonaAgent brings semantic clarity to AG2 agents by separating role, goal, backstory, and constraints. This simple addition:
-
-- ✅ Makes agents more intuitive to create and understand
-- ✅ Improves prompt effectiveness and LLM performance
-- ✅ Enables dynamic goal updates for flexible agents
-- ✅ Maintains 100% backward compatibility with AG2
-- ✅ Provides a bridge for CrewAI users migrating to AG2
-
-The implementation follows AG2's design patterns while introducing valuable concepts from CrewAI, creating the best of both worlds.
 
 ## See Also
 
