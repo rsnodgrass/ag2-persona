@@ -1,0 +1,126 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ag2-persona"
+version = "0.1.0"
+description = "Persona-based agents for AG2 (AutoGen) - enabling distinct character embodiment"
+readme = "README.md"
+license = {file = "LICENSE"}
+authors = [
+    {name = "Ryan Snodgrass", email = "ryan@snodgrass.dev"}
+]
+maintainers = [
+    {name = "Ryan Snodgrass", email = "ryan@snodgrass.dev"}
+]
+keywords = ["ag2", "autogen", "llm", "agents", "persona", "character", "roleplay"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+requires-python = ">=3.11"
+dependencies = [
+    "pyautogen>=0.2.0",
+]
+
+[project.optional-dependencies]
+yaml = ["ruamel.yaml>=0.18"]
+dev = [
+    "pytest>=8.3",
+    "pytest-cov>=5.0",
+    "ruff>=0.6.9",
+    "mypy>=1.12",
+    "pre-commit>=4.0.1",
+]
+all = [
+    "ag2-persona[yaml,dev]"
+]
+
+[project.urls]
+Homepage = "https://github.com/ryansnodgrass/ag2-persona"
+Documentation = "https://github.com/ryansnodgrass/ag2-persona#readme"
+Repository = "https://github.com/ryansnodgrass/ag2-persona.git"
+Issues = "https://github.com/ryansnodgrass/ag2-persona/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ag2_persona*"]
+
+[tool.setuptools.package-data]
+ag2_persona = ["py.typed"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+    "C4", # flake8-comprehensions
+    "UP", # pyupgrade
+]
+ignore = [
+    "E501", # line too long, handled by ruff format
+    "B008", # do not perform function calls in argument defaults
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "--cov=ag2_persona",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-fail-under=90",
+]
+
+[tool.coverage.run]
+source = ["ag2_persona"]
+omit = ["tests/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]

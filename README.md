@@ -1,8 +1,8 @@
-# StructuredAgent for AG2: Bringing Clarity to Agent Prompts
+# PersonaAgent for AG2: Enabling Distinct Character Embodiment
 
 ## Why This Matters
 
-AG2 (AutoGen) agents currently mix role, purpose, and context into a single unstructured `system_message`. This makes agents harder to understand, reuse, and maintain. By borrowing the successful `role`, `goal`, and `backstory` concepts from CrewAI, we can make AG2 agents more intuitive while maintaining full backward compatibility.
+AG2 (AutoGen) agents currently mix role, purpose, and context into a single unstructured `system_message`, which is fantastic flexibility but does not propose an common pattern for agents to authentically embody distinct personas. PersonaAgent enables agents to adopt rich, well-defined characters through explicit `role`, `goal`, and `backstory` components, allowing for more authentic and consistent agent behavior while maintaining full compatibility with all that AG2 offers.
 
 ### The Problem
 
@@ -15,16 +15,16 @@ agent = ConversableAgent(
 ```
 
 Issues:
-- 🤔 **Unclear structure** - Role, goal, and constraints mixed together
-- 🔄 **Hard to reuse** - Changing goals requires rewriting entire message
-- 📚 **Poor maintainability** - Difficult to update specific aspects
-- 🎯 **Reduced LLM performance** - Unstructured prompts can confuse models
+- 🎭 **Weak Persona Embodiment** - Agents lack distinct character identity
+- 🔄 **Limited Reuse** - Changing or sharing personas requires rewriting entire prompts
+- 📚 **Maintainability** - Difficult to update character aspects
+- 🎯 **Inconsistent Behavior** - Unstructured prompts lead to character drift
 
 ### The Solution
 
-StructuredAgent provides semantic clarity:
+PersonaAgent enables authentic character embodiment (inspired by CrewAI's backstory/goal structure):
 ```python
-agent = StructuredAgent(
+agent = PersonaAgent(
     name="reviewer",
     role="Senior Software Engineer",
     goal="Review code for quality issues and suggest improvements",
@@ -35,27 +35,26 @@ agent = StructuredAgent(
 ```
 
 Benefits:
-- ✨ **Clear semantics** - Separate concerns for role, goal, and context
-- 🔄 **Dynamic updates** - Change goals without rewriting everything
-- 📚 **Better maintenance** - Update specific components independently
-- 🎯 **Improved LLM performance** - Structured prompts perform better
+- 🎭 **Authentic Personas** - Agents embody distinct, consistent characters
+- 🔄 **Dynamic Character Updates** - Modify and share persona aspects without full rewrites
+- 📚 **Better Persona Maintenance** - Update character traits independently
+- 🎯 **Consistent Behavior** - Well-defined personas reduce character drift
 
 ## Quick Start
 
 ### Installation
 
-```python
-# Save ag2_structured.py to your project
-from ag2_structured import StructuredAgent
+```bash
+pip install ag2-persona
 ```
 
 ### Basic Usage
 
 ```python
-from ag2_structured import StructuredAgent
+from ag2_persona import PersonaAgent
 
-# Create a structured agent
-expert = StructuredAgent(
+# Create an agent with a distinct persona
+expert = PersonaAgent(
     name="data_analyst",
     role="Data Analysis Expert",
     goal="Analyze the provided dataset and identify key insights",
@@ -71,7 +70,7 @@ response = expert.generate_reply(messages=[{"content": "Analyze this sales data"
 
 ```python
 # Create agent with initial goal
-agent = StructuredAgent(
+agent = PersonaAgent(
     name="assistant",
     role="AI Assistant",
     goal="Help with general questions"
@@ -87,22 +86,22 @@ agent.update_goal("Focus on technical documentation writing")
 ```python
 from autogen import GroupChat, GroupChatManager
 
-# Create a research team with structured agents
-lead_scientist = StructuredAgent(
+# Create a research team with persona agents
+lead_scientist = PersonaAgent(
     name="lead_scientist",
     role="Research Lead",
     goal="Design experiments and coordinate research objectives",
     backstory="PhD in biology with 15 years of research experience"
 )
 
-data_analyst = StructuredAgent(
+data_analyst = PersonaAgent(
     name="data_analyst",
     role="Data Scientist",
     goal="Analyze experimental data and generate statistical insights",
     backstory="Expert in statistical modeling and machine learning"
 )
 
-lab_technician = StructuredAgent(
+lab_technician = PersonaAgent(
     name="lab_tech",
     role="Laboratory Technician",
     goal="Execute experiments and ensure quality control",
@@ -120,14 +119,14 @@ manager = GroupChatManager(groupchat)
 
 ## API Reference
 
-### StructuredAgent
+### PersonaAgent
 
-Extends `ConversableAgent` with structured prompt components.
+Extends `ConversableAgent` with persona-based prompt components.
 
 #### Constructor
 
 ```python
-StructuredAgent(
+PersonaAgent(
     name: str,
     role: str,
     goal: str,
@@ -164,14 +163,14 @@ agent.update_goal("Review only the security aspects of the code")
 
 ### Helper Functions
 
-#### `structured_agent()`
+#### `persona_agent()`
 
-Alternative functional interface for creating structured agents:
+Alternative functional interface for creating persona agents:
 
 ```python
-from ag2_structured import structured_agent
+from ag2_persona import persona_agent
 
-agent = structured_agent(
+agent = persona_agent(
     name="helper",
     role="Assistant",
     goal="Help users with their questions",
@@ -179,12 +178,12 @@ agent = structured_agent(
 )
 ```
 
-#### `structured_agent_from_config()`
+#### `persona_agent_from_config()`
 
-Create structured agents from configuration dictionaries:
+Create persona agents from configuration dictionaries:
 
 ```python
-from ag2_structured import structured_agent_from_config
+from ag2_persona import persona_agent_from_config
 
 config = {
     "name": "bioinformatics_specialist",
@@ -195,7 +194,7 @@ config = {
     "llm_config": {"model": "gpt-4", "temperature": 0.5}
 }
 
-agent = structured_agent_from_config(config)
+agent = persona_agent_from_config(config)
 ```
 
 ## Migration Guide
@@ -217,7 +216,7 @@ agent = ConversableAgent(
 
 **After:**
 ```python
-agent = StructuredAgent(
+agent = PersonaAgent(
     name="researcher",
     role="Marine Biology Researcher",
     goal="Analyze oceanographic data to identify coral health patterns",
@@ -245,9 +244,9 @@ agent = Agent(
 )
 ```
 
-**AG2 StructuredAgent:**
+**AG2 PersonaAgent:**
 ```python
-agent = StructuredAgent(
+agent = PersonaAgent(
     name="climate_scientist",
     role="Climate Scientist",
     goal="Analyze climate data and predict weather patterns",
@@ -278,25 +277,26 @@ principal_investigator:
 ```
 
 ```python
-import yaml
-from ag2_structured import structured_agent_from_config
+from ruamel.yaml import YAML
+from ag2_persona import persona_agent_from_config
 
 # Load configuration
+yaml = YAML()
 with open("agents.yaml", "r") as f:
-    agents_config = yaml.safe_load(f)
+    agents_config = yaml.load(f)
 
 # Create agents from config
 agents = {}
 for name, config in agents_config.items():
     config["name"] = name
-    agents[name] = structured_agent_from_config(config)
+    agents[name] = persona_agent_from_config(config)
 ```
 
 ### Dynamic Role-Playing
 
 ```python
 # Create a versatile agent
-analyst = StructuredAgent(
+analyst = PersonaAgent(
     name="analyst",
     role="Data Analyst",
     goal="Provide data-driven insights",
@@ -314,14 +314,14 @@ for phase in ["data_collection", "analysis", "interpretation"]:
 
 ```python
 # Create research team with clear hierarchy
-research_director = StructuredAgent(
+research_director = PersonaAgent(
     name="director",
     role="Research Director",
     goal="Set research priorities and approve major decisions",
     backstory="25 years leading interdisciplinary research teams"
 )
 
-project_manager = StructuredAgent(
+project_manager = PersonaAgent(
     name="pm",
     role="Research Project Manager",
     goal="Coordinate research activities and ensure timeline adherence",
@@ -329,7 +329,7 @@ project_manager = StructuredAgent(
 )
 
 researchers = [
-    StructuredAgent(
+    PersonaAgent(
         name=f"researcher_{i}",
         role="Research Scientist",
         goal="Conduct experiments and collect data according to protocols",
@@ -374,7 +374,7 @@ We chose to extend `ConversableAgent` because:
 
 ### Backward Compatibility
 
-StructuredAgent is a pure addition:
+PersonaAgent is a pure addition:
 - Extends ConversableAgent without modifying it
 - Works with all existing AG2 features
 - Can be mixed with standard agents
@@ -382,7 +382,7 @@ StructuredAgent is a pure addition:
 
 ## Performance Benefits
 
-Structured prompts improve LLM performance:
+Persona-based prompts improve LLM performance:
 
 1. **Better Context Understanding**: Clear role separation helps models
 2. **Reduced Confusion**: Explicit goals prevent task drift
@@ -402,7 +402,7 @@ This implementation is designed to be contributed to AG2:
 To contribute:
 ```bash
 # Fork AG2 repository
-# Add ag2_structured.py to autogen/agentchat/
+# Add ag2_persona.py to autogen/agentchat/
 # Add tests to test/agentchat/
 # Submit PR with this README as documentation
 ```
@@ -412,7 +412,7 @@ To contribute:
 **Q: Does this replace ConversableAgent?**
 A: No, it extends it. All ConversableAgent features still work.
 
-**Q: Can I mix StructuredAgent with regular agents?**
+**Q: Can I mix PersonaAgent with regular agents?**
 A: Yes, they're fully compatible in group chats and conversations.
 
 **Q: What if I need custom system message formatting?**
@@ -426,7 +426,7 @@ A: Submit PRs to enhance the structure while maintaining backward compatibility.
 
 ## Summary
 
-StructuredAgent brings semantic clarity to AG2 agents by separating role, goal, backstory, and constraints. This simple addition:
+PersonaAgent brings semantic clarity to AG2 agents by separating role, goal, backstory, and constraints. This simple addition:
 
 - ✅ Makes agents more intuitive to create and understand
 - ✅ Improves prompt effectiveness and LLM performance
@@ -435,3 +435,7 @@ StructuredAgent brings semantic clarity to AG2 agents by separating role, goal, 
 - ✅ Provides a bridge for CrewAI users migrating to AG2
 
 The implementation follows AG2's design patterns while introducing valuable concepts from CrewAI, creating the best of both worlds.
+
+## See Also
+
+* [AG2](https://ag2.ai/)
