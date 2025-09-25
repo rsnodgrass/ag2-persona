@@ -115,8 +115,7 @@ class PersonaAgent(ConversableAgent):
         # Add constraints if provided - rules and limitations
         if self.constraints:
             parts.append("\n## Constraints")
-            for constraint in self.constraints:
-                parts.append(f"- {constraint}")
+            parts.extend(f"- {constraint}" for constraint in self.constraints)
 
         return "\n".join(parts)
 

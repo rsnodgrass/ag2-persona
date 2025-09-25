@@ -378,9 +378,10 @@ class AsyncPersonaBuilder:
 
         # Validate LLM config structure if provided (skip if False - means no LLM)
         if isinstance(self._llm_config, dict):
-            if not any(key in self._llm_config for key in ("config_list", "model")):
+            required_keys = ["config_list", "model"]
+            if not any(key in self._llm_config for key in required_keys):
                 errors.append(
-                    f"LLM config must contain 'config_list' or 'model' for persona '{self.name}'"
+                    f"LLM config must contain one of {required_keys} for persona '{self.name}'"
                 )
 
         if errors:

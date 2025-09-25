@@ -261,7 +261,7 @@ class PersonaBuilder:
         """String representation of the builder."""
         if self._goal is None:
             goal_display = "None"
-        elif len(self._goal) > 30:
+        elif len(self._goal) > 30:  # noqa: PLR2004
             goal_display = f"'{self._goal[:30]}...'"
         else:
             goal_display = f"'{self._goal}'"

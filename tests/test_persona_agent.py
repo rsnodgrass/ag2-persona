@@ -285,7 +285,7 @@ class TestEdgeCases(unittest.TestCase):
         self.assertIn("A" * 100, agent.system_message)  # Should contain the content
 
 
-def run_tests():
+def run_tests() -> None:
     """Run all tests."""
     unittest.main(verbosity=2)
 

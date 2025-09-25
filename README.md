@@ -85,19 +85,19 @@ response = expert.generate_reply(messages=[{"content": "Analyze this sales data"
 Build multi-agent teams by loading expert personas from YAML files. This enables domain experts to define agent behavior while developers handle runtime integration:
 
 ```python
-from ag2_persona import PersonaBuilder, AsyncPersonaBuilder
+from ag2_persona import PersonaBuilder
 from autogen import GroupChat, GroupChatManager
 
-# Load domain expert personas from YAML library (async version)
-lead_scientist = await (AsyncPersonaBuilder("lead_scientist")
-                       .from_yaml("library/research_team_lead.yaml")
-                       .llm_config({"model": "gpt-4", "temperature": 0.7})
-                       .build())
+# Load domain expert personas from YAML library (sync version)
+lead_scientist = (PersonaBuilder("lead_scientist")
+                 .from_yaml("library/research_team_lead.yaml")
+                 .llm_config({"model": "gpt-4", "temperature": 0.7})
+                 .build())
 
-data_analyst = await (AsyncPersonaBuilder("data_analyst")
-                     .from_yaml("library/senior_data_engineer.yaml")
-                     .llm_config({"model": "gpt-4", "temperature": 0.5})
-                     .build())
+data_analyst = (PersonaBuilder("data_analyst")
+               .from_yaml("library/senior_data_engineer.yaml")
+               .llm_config({"model": "gpt-4", "temperature": 0.5})
+               .build())
 
 # Manual construction when YAML doesn't exist yet
 lab_technician = (PersonaBuilder("lab_tech")
@@ -132,7 +132,7 @@ from ag2_persona import AsyncPersonaBuilder
 from autogen import GroupChat, GroupChatManager
 
 async def create_async_team():
-    # Load personas asynchronously - no blocking I/O
+    # Load personas asynchronously with true fluent chaining - no blocking I/O
     lead_agent = await (AsyncPersonaBuilder("lead_scientist")
                        .from_yaml("library/research_team_lead.yaml")
                        .llm_config({"model": "gpt-4", "temperature": 0.7})
@@ -150,7 +150,7 @@ async def main():
     team = await create_async_team()
     # Use team in async AG2 workflows...
 
-# Install async dependencies: pip install ag2-persona[yaml-async]
+# YAML and async support now included by default
 ```
 
 ## API Reference
@@ -240,10 +240,7 @@ async def create_async_agent():
                  .build())
 ```
 
-**Installation for async support:**
-```bash
-pip install ag2-persona[yaml-async]
-```
+**YAML and async support included by default.**
 
 ## Migration Guide
 

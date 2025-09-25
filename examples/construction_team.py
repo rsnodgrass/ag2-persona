@@ -90,9 +90,7 @@ def create_construction_team() -> tuple[UserProxyAgent, GroupChatManager]:
         .from_yaml("library/value_engineering_specialist.yaml")
         .llm_config(llm_config)
         .with_human_input_never()
-        .description(
-            "Optimizes costs, identifies value engineering opportunities, maximizes ROI"
-        )
+        .description("Optimizes costs, identifies value engineering opportunities, maximizes ROI")
         .build()
     )
 

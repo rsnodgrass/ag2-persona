@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **PersonaBuilder Pattern**: New fluent interface for creating PersonaAgent instances with validation
   - `PersonaBuilder.from_yaml()` and `PersonaBuilder.from_dict()` for flexible configuration loading
   - Runtime LLM configuration separation from persona definition
-  - Explicit human input mode methods: `with_human_input_never()`, `with_human_input_always()`, `with_human_input_terminate()`
+  - Explicit human input mode methods: `human_input_never()`, `human_input_always()`, `human_input_terminate()`
   - Comprehensive persona library with YAML configuration
 - **AG2 Best Practices Support**: Full compatibility with AG2's ConversableAgent patterns
   - Automatic `description` generation for GroupChat agent selection
@@ -22,7 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Documentation restructured to emphasize YAML library benefits
   - FAQ format modernized with collapsible sections
 - **Asynchronous Support (Optional)**:
-  - Async YAML loading with `from_yaml_async()` method
+  - AsyncPersonaBuilder that uses deferred execution queue enabling true single-chain syntax: `await
+  (builder.method1().method2().build())`
   - Optional `aiofiles` dependency for non-blocking I/O
   - New dependency extras: `async`, `yaml-async`
 - **Code Cleanup**:
