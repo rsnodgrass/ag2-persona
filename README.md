@@ -2,6 +2,7 @@
 
 [![PyPi](https://img.shields.io/pypi/v/ag2-persona.svg)](https://pypi.python.org/pypi/ag2-person)
 [![MIT license](http://img.shields.io/badge/license-MIT-brightgreen.svg)](http://opensource.org/licenses/MIT)
+[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue.svg)](https://rsnodgrass.github.io/ag2-persona/)
 
 
 ## Why This Matters
@@ -63,6 +64,8 @@ pip install ag2-persona
 # or with modern uv:
 uv add ag2-persona
 ```
+
+📖 **[Full Documentation](https://rsnodgrass.github.io/ag2-persona/)** - Complete guides, API reference, and examples
 
 ### Basic Usage
 

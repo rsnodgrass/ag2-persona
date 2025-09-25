@@ -207,6 +207,18 @@ uv run mypy ag2_persona/
 
 # Build and validate
 uv build
+
+# Build documentation (optional)
+uv run mkdocs build
+```
+
+## Documentation
+
+The project documentation is available at: https://rsnodgrass.github.io/ag2-persona/
+
+To build and serve documentation locally:
+```bash
+uv run mkdocs serve  # Serves at http://127.0.0.1:8000
 ```
 
 ## Summary

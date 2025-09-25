@@ -112,6 +112,12 @@ ipython_config.py
 #   https://pdm.fming.dev/#use-with-ide
 .pdm.toml
 
+# uv
+#   Similar to other lock files, uv.lock is generally recommended for applications but not for libraries.
+#   For libraries like this one, users should resolve dependencies based on their own constraints.
+#   https://docs.astral.sh/uv/
+uv.lock
+
 # PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
 __pypackages__/
 
