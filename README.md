@@ -204,7 +204,7 @@ PersonaBuilder supports three construction patterns for different use cases:
 ```python
 from ag2_persona import PersonaBuilder
 
-# Option 1: Load expert personas from YAML library
+# Option 1 (Recommended): Load expert personas from YAML library
 expert = (PersonaBuilder("bioinformatics_specialist")
           .from_yaml("library/bioinformatics_specialist.yaml")
           .llm_config({"model": "gpt-4", "temperature": 0.5})
