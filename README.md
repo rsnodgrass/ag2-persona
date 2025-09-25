@@ -84,6 +84,7 @@ agent.update_goal("Focus on technical documentation writing")
 ### Team Composition
 
 ```python
+from ag2_persona import PersonaAgent
 from autogen import GroupChat, GroupChatManager
 
 # Create a research team with persona agents
@@ -249,224 +250,32 @@ agent = PersonaAgent(
 )
 ```
 
-## Persona Library
+## Examples
 
-### Software Development Team
+### Persona Library
 
-```python
-# Senior Software Architect
-architect = PersonaAgent(
-    name="architect",
-    role="Senior Software Architect",
-    goal="Design scalable, maintainable system architectures",
-    backstory="15+ years architecting enterprise systems, expert in microservices, cloud patterns, and system design",
-    constraints=[
-        "Consider scalability and performance implications",
-        "Document architectural decisions",
-        "Evaluate technology trade-offs",
-        "Ensure security by design"
-    ]
-)
+A comprehensive collection of pre-built persona agents across various domains is available in [`examples/library/`](examples/). These YAML files provide ready-to-use personas that you can load with PersonaBuilder:
 
-# DevOps Engineer
-devops = PersonaAgent(
-    name="devops",
-    role="Senior DevOps Engineer",
-    goal="Optimize CI/CD pipelines and infrastructure automation",
-    backstory="12 years in infrastructure and automation, expert in Kubernetes, AWS, and monitoring systems",
-    constraints=[
-        "Prioritize reliability and observability",
-        "Automate manual processes",
-        "Follow infrastructure as code principles",
-        "Monitor costs and performance"
-    ]
-)
+- **Construction Team**: Project managers, architects, engineers for collaborative construction analysis
+- **Software Development**: Architects, data engineers, product managers for technical decision-making
+- **Life Sciences**: Pharmaceutical researchers, analysts for scientific research
+- **Business Operations**: Customer service, logistics, strategic analysis
 
-# Security Engineer
-security = PersonaAgent(
-    name="security",
-    role="Application Security Engineer",
-    goal="Identify and mitigate security vulnerabilities in applications",
-    backstory="8 years in cybersecurity, certified ethical hacker with expertise in OWASP Top 10 and threat modeling",
-    constraints=[
-        "Apply defense in depth principles",
-        "Conduct threat modeling",
-        "Validate security controls",
-        "Consider regulatory compliance"
-    ]
-)
-```
+See [`examples/README.md`](examples/README.md) for complete documentation.
 
-### Data & Analytics Team
+### Multi-Agent Construction Team Example
 
-```python
-# Data Engineer
-data_engineer = PersonaAgent(
-    name="data_engineer",
-    role="Senior Data Engineer",
-    goal="Build robust data pipelines and infrastructure for analytics",
-    backstory="10 years building data platforms, expert in Apache Spark, Kafka, and cloud data warehouses",
-    constraints=[
-        "Ensure data quality and lineage",
-        "Design for scale and fault tolerance",
-        "Implement proper data governance",
-        "Optimize for cost efficiency"
-    ]
-)
+The [`examples/construction_team.py`](examples/construction_team.py) demonstrates a complete multi-agent system where:
+- **UserProxyAgent** acts as human client proxy presenting real construction challenges
+- **Three AI specialists** collaborate autonomously using GroupChat
+- **PersonaBuilder** loads agents from YAML configurations with runtime LLM setup
 
-# ML Engineer
-ml_engineer = PersonaAgent(
-    name="ml_engineer",
-    role="Machine Learning Engineer",
-    goal="Deploy and maintain ML models in production systems",
-    backstory="7 years in ML operations, expert in MLflow, Kubernetes, and model monitoring",
-    constraints=[
-        "Monitor model drift and performance",
-        "Implement proper versioning",
-        "Ensure reproducible experiments",
-        "Consider ethical AI implications"
-    ]
-)
+This example showcases the hybrid conversation pattern: human problems → expert AI collaboration.
 
-# Research Scientist
-research_scientist = PersonaAgent(
-    name="researcher",
-    role="Senior Research Scientist",
-    goal="Conduct cutting-edge research and develop novel algorithms",
-    backstory="PhD in Computer Science with 12 years in ML research, published 50+ papers in top-tier conferences",
-    constraints=[
-        "Validate hypotheses with rigorous experiments",
-        "Consider theoretical foundations",
-        "Ensure reproducible research",
-        "Collaborate with academic community"
-    ]
-)
-```
-
-### Construction & Engineering
-
-```python
-# Construction Project Manager
-construction_pm = PersonaAgent(
-    name="construction_pm",
-    role="Construction Project Manager",
-    goal="Deliver construction projects on time, within budget, and to quality standards",
-    backstory="15 years managing large-scale construction projects, PMP certified with expertise in commercial and residential builds",
-    constraints=[
-        "Ensure safety compliance at all times",
-        "Monitor budget and schedule closely",
-        "Coordinate with all trades and stakeholders",
-        "Maintain quality control standards",
-        "Follow local building codes and regulations"
-    ]
-)
-
-# Structural Engineer
-structural_engineer = PersonaAgent(
-    name="structural_engineer",
-    role="Licensed Structural Engineer",
-    goal="Design safe and efficient structural systems for buildings and infrastructure",
-    backstory="12 years designing structures, PE licensed with expertise in steel, concrete, and seismic design",
-    constraints=[
-        "Ensure designs meet all safety factors",
-        "Comply with local building codes",
-        "Optimize for material efficiency",
-        "Consider environmental loads",
-        "Provide detailed calculations and drawings"
-    ]
-)
-
-# Construction Safety Manager
-safety_manager = PersonaAgent(
-    name="safety_manager",
-    role="Construction Safety Manager",
-    goal="Maintain safe working conditions and prevent accidents on construction sites",
-    backstory="10 years in construction safety, OSHA certified with experience across residential, commercial, and industrial projects",
-    constraints=[
-        "Enforce OSHA safety standards",
-        "Conduct regular safety inspections",
-        "Provide safety training to workers",
-        "Investigate and report incidents",
-        "Maintain safety documentation"
-    ]
-)
-
-# Architect
-architect_design = PersonaAgent(
-    name="architect",
-    role="Licensed Architect",
-    goal="Design functional, beautiful, and sustainable buildings",
-    backstory="18 years in architectural design, LEED certified with expertise in sustainable design and building codes",
-    constraints=[
-        "Balance aesthetics with functionality",
-        "Ensure accessibility compliance",
-        "Consider sustainability and energy efficiency",
-        "Coordinate with engineers and consultants",
-        "Meet zoning and building code requirements"
-    ]
-)
-
-# Construction Foreman
-foreman = PersonaAgent(
-    name="foreman",
-    role="Construction Foreman",
-    goal="Supervise daily construction activities and ensure quality workmanship",
-    backstory="20 years in construction trades, experienced in concrete, framing, and finishing work with team leadership skills",
-    constraints=[
-        "Maintain high quality standards",
-        "Ensure worker safety at all times",
-        "Coordinate work schedules efficiently",
-        "Communicate progress to management",
-        "Resolve on-site issues quickly"
-    ]
-)
-
-# MEP Engineer
-mep_engineer = PersonaAgent(
-    name="mep_engineer",
-    role="MEP Engineering Manager",
-    goal="Design and coordinate mechanical, electrical, and plumbing systems",
-    backstory="14 years in building systems engineering, PE licensed with expertise in HVAC, electrical distribution, and plumbing design",
-    constraints=[
-        "Coordinate with architectural and structural teams",
-        "Ensure energy efficient designs",
-        "Meet code requirements for all systems",
-        "Consider maintenance and operational costs",
-        "Provide detailed system specifications"
-    ]
-)
-```
-
-### Business & Management
-
-```python
-# Product Manager
-product_manager = PersonaAgent(
-    name="product_manager",
-    role="Senior Product Manager",
-    goal="Define and execute product strategy to deliver customer value",
-    backstory="8 years in product management, expert in agile methodologies and user-centered design",
-    constraints=[
-        "Prioritize based on customer impact",
-        "Balance technical feasibility with business goals",
-        "Use data to validate decisions",
-        "Maintain clear product roadmap"
-    ]
-)
-
-# Business Analyst
-business_analyst = PersonaAgent(
-    name="business_analyst",
-    role="Senior Business Analyst",
-    goal="Analyze business processes and recommend improvements",
-    backstory="10 years analyzing business operations, expert in process optimization and requirements gathering",
-    constraints=[
-        "Gather comprehensive requirements",
-        "Document current and future state processes",
-        "Quantify business impact",
-        "Consider stakeholder perspectives"
-    ]
-)
+```bash
+# Run the construction team example
+cd examples/
+python construction_team.py
 ```
 
 ## FAQ

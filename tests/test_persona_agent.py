@@ -5,18 +5,9 @@ This module contains comprehensive tests for the PersonaAgent implementation,
 ensuring reliability and compatibility with AG2 patterns.
 """
 
-import json
-import os
-import tempfile
 import unittest
-from unittest.mock import MagicMock, mock_open, patch
 
-from ag2_persona.persona_agent import (
-    AG2_AVAILABLE,
-    PersonaAgent,
-    persona_agent,
-    persona_agent_from_config,
-)
+from ag2_persona.persona_agent import AG2_AVAILABLE, PersonaAgent
 
 
 class TestPersonaAgent(unittest.TestCase):
@@ -194,64 +185,36 @@ class TestPersonaAgent(unittest.TestCase):
         self.assertIn("...", repr_long)  # Should be truncated
 
 
-class TestFunctionalInterface(unittest.TestCase):
-    """Test functional interface."""
+class TestPersonaBuilder(unittest.TestCase):
+    """Test PersonaBuilder functionality."""
 
-    def test_persona_agent_function(self):
-        """Test the functional interface."""
-        agent = persona_agent(name="helper", role="Helper", goal="Assist users")
+    def test_persona_builder_basic(self):
+        """Test basic PersonaBuilder usage."""
+        from ag2_persona import PersonaBuilder
+
+        agent = PersonaBuilder("helper").with_role("Helper").with_goal("Assist users").build()
 
         self.assertIsInstance(agent, PersonaAgent)
         self.assertEqual(agent.role, "Helper")
+        self.assertEqual(agent.name, "helper")
 
-    def test_from_config_dict(self):
-        """Test creating agent from config dictionary."""
+    def test_persona_builder_from_dict(self):
+        """Test creating agent from config dictionary using PersonaBuilder."""
+        from ag2_persona import PersonaBuilder
+
         config = {
-            "name": "test",
             "role": "Tester",
             "goal": "Test system",
             "backstory": "Expert tester",
             "constraints": ["Be thorough"],
         }
 
-        agent = persona_agent_from_config(config)
+        agent = PersonaBuilder("test").from_dict(config).build()
 
         self.assertEqual(agent.name, "test")
         self.assertEqual(agent.role, "Tester")
         self.assertEqual(agent.backstory, "Expert tester")
-
-    def test_from_config_file_json(self):
-        """Test loading from JSON config file."""
-        config_data = {"name": "test", "role": "Tester", "goal": "Test system"}
-
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
-            json.dump(config_data, f)
-            config_file = f.name
-
-        try:
-            agent = persona_agent_from_config(config_file)
-            self.assertEqual(agent.name, "test")
-            self.assertEqual(agent.role, "Tester")
-        finally:
-            os.unlink(config_file)
-
-
-    def test_from_config_file_not_found(self):
-        """Test error handling for missing config file."""
-        with self.assertRaises(FileNotFoundError):
-            persona_agent_from_config("nonexistent.json")
-
-    def test_from_config_unsupported_format(self):
-        """Test error handling for unsupported file format."""
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
-            f.write("invalid format")
-            config_file = f.name
-
-        try:
-            with self.assertRaises(ValueError):
-                persona_agent_from_config(config_file)
-        finally:
-            os.unlink(config_file)
+        self.assertEqual(agent.constraints, ["Be thorough"])
 
 
 class TestAG2Integration(unittest.TestCase):
@@ -274,7 +237,6 @@ class TestAG2Integration(unittest.TestCase):
         # Basic properties should work regardless
         self.assertEqual(agent.name, "test")
         self.assertIsInstance(agent.system_message, str)
-
 
 
 class TestEdgeCases(unittest.TestCase):

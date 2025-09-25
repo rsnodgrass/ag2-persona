@@ -5,8 +5,11 @@ This module provides PersonaBuilder, which offers a more flexible and robust way
 to create PersonaAgent instances compared to direct constructor calls or from_dict methods.
 """
 
-from typing import Any, Optional
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from .persona_agent import PersonaAgent
 
 
 class PersonaBuilder:
@@ -32,163 +35,74 @@ class PersonaBuilder:
             name: Unique identifier for the agent
         """
         self.name = name
-        self.role: Optional[str] = None
-        self.goal: Optional[str] = None
+        self.role: str | None = None
+        self.goal: str | None = None
         self.backstory: str = ""
         self.constraints: list[str] = []
-        self.llm_config: Optional[dict[str, Any]] = None
-        self.description: Optional[str] = None
+        self.llm_config: dict[str, Any] | None = None
+        self.description: str | None = None
         self.additional_kwargs: dict[str, Any] = {}
 
     def with_role(self, role: str) -> "PersonaBuilder":
-        """
-        Set the persona's role or title.
-
-        Args:
-            role: The agent's professional role (e.g., "Senior Software Engineer")
-
-        Returns:
-            PersonaBuilder: Self for method chaining
-        """
+        """Set the persona's role or title."""
         self.role = role
         return self
 
     def with_goal(self, goal: str) -> "PersonaBuilder":
-        """
-        Set the persona's objective or goal.
-
-        Args:
-            goal: What the agent should accomplish
-
-        Returns:
-            PersonaBuilder: Self for method chaining
-        """
+        """Set the persona's objective or goal."""
         self.goal = goal
         return self
 
     def with_backstory(self, backstory: str) -> "PersonaBuilder":
-        """
-        Set the persona's background and expertise.
-
-        Args:
-            backstory: Background context, experience, and expertise
-
-        Returns:
-            PersonaBuilder: Self for method chaining
-        """
+        """Set the persona's background and expertise."""
         self.backstory = backstory
         return self
 
     def add_constraint(self, constraint: str) -> "PersonaBuilder":
-        """
-        Add a single constraint or rule for the agent.
-
-        Args:
-            constraint: A rule or limitation for the agent to follow
-
-        Returns:
-            PersonaBuilder: Self for method chaining
-        """
+        """Add a single constraint or rule for the agent."""
         if constraint and constraint not in self.constraints:
             self.constraints.append(constraint)
         return self
 
     def with_constraints(self, constraints: list[str]) -> "PersonaBuilder":
-        """
-        Set multiple constraints at once, replacing any existing constraints.
-
-        Args:
-            constraints: List of rules or limitations
-
-        Returns:
-            PersonaBuilder: Self for method chaining
-        """
-        self.constraints = constraints if constraints else []
+        """Set multiple constraints at once, replacing any existing constraints."""
+        self.constraints = constraints
         return self
 
     def with_llm_config(self, config: dict[str, Any]) -> "PersonaBuilder":
-        """
-        Set the LLM configuration for the agent.
-
-        Args:
-            config: LLM configuration dictionary (model, temperature, etc.)
-
-        Returns:
-            PersonaBuilder: Self for method chaining
-        """
+        """Set the LLM configuration for the agent."""
         self.llm_config = config
         return self
 
     def with_temperature(self, temp: float) -> "PersonaBuilder":
-        """
-        Convenience method to set just the temperature in LLM config.
-
-        Args:
-            temp: Temperature value for the LLM
-
-        Returns:
-            PersonaBuilder: Self for method chaining
-        """
+        """Convenience method to set just the temperature in LLM config."""
         if not self.llm_config:
             self.llm_config = {}
         self.llm_config["temperature"] = temp
         return self
 
     def with_human_input_never(self) -> "PersonaBuilder":
-        """
-        Set agent to never prompt for human input.
-
-        Returns:
-            PersonaBuilder: Self for method chaining
-        """
+        """Set agent to never prompt for human input."""
         self.additional_kwargs["human_input_mode"] = "NEVER"
         return self
 
     def with_human_input_always(self) -> "PersonaBuilder":
-        """
-        Set agent to always prompt for human input.
-
-        Returns:
-            PersonaBuilder: Self for method chaining
-        """
+        """Set agent to always prompt for human input."""
         self.additional_kwargs["human_input_mode"] = "ALWAYS"
         return self
 
     def with_human_input_terminate(self) -> "PersonaBuilder":
-        """
-        Set agent to prompt for human input only on termination.
-
-        This is the default AG2 ConversableAgent behavior.
-
-        Returns:
-            PersonaBuilder: Self for method chaining
-        """
+        """Set agent to prompt for human input only on termination (AG2 default)."""
         self.additional_kwargs["human_input_mode"] = "TERMINATE"
         return self
 
     def with_description(self, description: str) -> "PersonaBuilder":
-        """
-        Set description for GroupChat agent selection.
-
-        Args:
-            description: Concise description for GroupChatManager to use for agent selection
-
-        Returns:
-            PersonaBuilder: Self for method chaining
-        """
+        """Set description for GroupChat agent selection."""
         self.description = description
         return self
 
     def with_kwargs(self, **kwargs: Any) -> "PersonaBuilder":
-        """
-        Add additional ConversableAgent parameters.
-
-        Args:
-            **kwargs: Additional parameters to pass to PersonaAgent constructor
-
-        Returns:
-            PersonaBuilder: Self for method chaining
-        """
+        """Add additional ConversableAgent parameters."""
         self.additional_kwargs.update(kwargs)
         return self
 
@@ -219,7 +133,9 @@ class PersonaBuilder:
 
         # Validate constraints format
         if self.constraints and not isinstance(self.constraints, list):
-            raise ValueError(f"Constraints must be a list for persona '{self.name}', got {type(self.constraints)}")
+            raise ValueError(
+                f"Constraints must be a list for persona '{self.name}', got {type(self.constraints)}"
+            )
 
         return self
 
@@ -252,7 +168,7 @@ class PersonaBuilder:
 
         yaml = YAML()
         try:
-            with open(file_path) as f:
+            with file_path.open() as f:
                 config = yaml.load(f)
         except Exception as e:
             raise ValueError(f"Error loading YAML from {file_path}: {e}") from e
@@ -263,15 +179,7 @@ class PersonaBuilder:
         return self.from_dict(config)
 
     def extend_goal(self, additional_goal: str) -> "PersonaBuilder":
-        """
-        Extend the existing goal with additional requirements.
-
-        Args:
-            additional_goal: Additional goal text to append
-
-        Returns:
-            PersonaBuilder: Self for method chaining
-        """
+        """Extend the existing goal with additional requirements."""
         if self.goal:
             self.goal = f"{self.goal}. Additionally, {additional_goal}"
         else:
@@ -279,11 +187,7 @@ class PersonaBuilder:
         return self
 
     def validate(self) -> "PersonaBuilder":
-        """
-        Validate the current configuration before building.
-
-        Returns:
-            PersonaBuilder: Self for method chaining
+        """Validate the current configuration before building.
 
         Raises:
             ValueError: If validation fails with detailed error messages
@@ -299,22 +203,30 @@ class PersonaBuilder:
 
         # Validate constraints format
         if self.constraints and not isinstance(self.constraints, list):
-            errors.append(f"Constraints must be a list for persona '{self.name}', got {type(self.constraints)}")
+            errors.append(
+                f"Constraints must be a list for persona '{self.name}', got {type(self.constraints)}"
+            )
 
         # Validate LLM config structure if provided
         if self.llm_config is not None:
             if not isinstance(self.llm_config, dict):
-                errors.append(f"LLM config must be a dictionary for persona '{self.name}', got {type(self.llm_config)}")
-            elif not any(key in self.llm_config for key in ["config_list", "model"]):
-                errors.append(f"LLM config must contain 'config_list' or 'model' for persona '{self.name}'")
+                errors.append(
+                    f"LLM config must be a dictionary for persona '{self.name}', got {type(self.llm_config)}"
+                )
+            elif not any(key in self.llm_config for key in ("config_list", "model")):
+                errors.append(
+                    f"LLM config must contain 'config_list' or 'model' for persona '{self.name}'"
+                )
 
         if errors:
-            error_msg = f"Persona validation failed for '{self.name}':\n" + "\n".join(f"  - {error}" for error in errors)
+            error_msg = f"Persona validation failed for '{self.name}':\n" + "\n".join(
+                f"  - {error}" for error in errors
+            )
             raise ValueError(error_msg)
 
         return self
 
-    def build(self):
+    def build(self) -> "PersonaAgent":
         """
         Build the PersonaAgent instance with validation.
 
@@ -330,6 +242,10 @@ class PersonaBuilder:
         # Validate before building
         self.validate()
 
+        # After validation, these should be guaranteed to exist
+        assert self.role is not None, "Role should be set after validation"
+        assert self.goal is not None, "Goal should be set after validation"
+
         return PersonaAgent(
             name=self.name,
             role=self.role,
@@ -338,10 +254,16 @@ class PersonaBuilder:
             constraints=self.constraints,
             description=self.description,
             llm_config=self.llm_config,
-            **self.additional_kwargs
+            **self.additional_kwargs,
         )
 
     def __repr__(self) -> str:
         """String representation of the builder."""
-        return (f"PersonaBuilder(name='{self.name}', role='{self.role}', "
-                f"goal='{self.goal[:30]}...' if self.goal else None)")
+        if self.goal is None:
+            goal_display = "None"
+        elif len(self.goal) > 30:
+            goal_display = f"'{self.goal[:30]}...'"
+        else:
+            goal_display = f"'{self.goal}'"
+
+        return f"PersonaBuilder(name='{self.name}', role='{self.role}', goal={goal_display})"

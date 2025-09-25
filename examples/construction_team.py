@@ -10,7 +10,7 @@ This demonstrates AG2's GroupChat pattern with PersonaAgents.
 
 Prerequisites:
     # Install dependencies
-    
+
 
     # Setup Ollama with Gemma3:4b (local, no API key needed)
     ollama pull gemma2:2b
@@ -32,11 +32,12 @@ from pathlib import Path
 # Add the parent directory to path to import local ag2_persona
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from ag2_persona import PersonaAgent
-from ag2_persona.persona_builder import PersonaBuilder
 from autogen import GroupChat, GroupChatManager, UserProxyAgent
 
-def create_construction_team():
+from ag2_persona.persona_builder import PersonaBuilder
+
+
+def create_construction_team() -> tuple[UserProxyAgent, GroupChatManager]:
     """
     Create a team of construction specialists using PersonaBuilder.
 
@@ -60,32 +61,40 @@ def create_construction_team():
                 "model": "tinyllama",
                 "base_url": "http://localhost:11434/v1",
                 "api_key": "ollama",  # placeholder for Ollama
-                "price": [0, 0]  # Free local model - suppresses cost warnings
+                "price": [0, 0],  # Free local model - suppresses cost warnings
             }
         ],
-        "temperature": 0.3
+        "temperature": 0.3,
     }
 
     # Create set of construction specialists for evaluating projects
     # using PersonaBuilder along with AG2 best practices.
-    project_manager = (PersonaBuilder("project_manager")
-                       .from_yaml("library/construction_project_manager.yaml")
-                       .with_llm_config(llm_config)
-                       .with_human_input_never()
-                       .build())
+    project_manager = (
+        PersonaBuilder("project_manager")
+        .from_yaml("library/construction_project_manager.yaml")
+        .with_llm_config(llm_config)
+        .with_human_input_never()
+        .build()
+    )
 
-    architect_specialist = (PersonaBuilder("architect_specialist")
-                           .from_yaml("library/architectural_specialist.yaml")
-                           .with_llm_config(llm_config)
-                           .with_human_input_never()
-                           .build())
+    architect_specialist = (
+        PersonaBuilder("architect_specialist")
+        .from_yaml("library/architectural_specialist.yaml")
+        .with_llm_config(llm_config)
+        .with_human_input_never()
+        .build()
+    )
 
-    value_engineer = (PersonaBuilder("value_engineer")
-                     .from_yaml("library/value_engineering_specialist.yaml")
-                     .with_llm_config(llm_config)
-                     .with_human_input_never()
-                     .with_description("Optimizes costs, identifies value engineering opportunities, maximizes ROI")
-                     .build())
+    value_engineer = (
+        PersonaBuilder("value_engineer")
+        .from_yaml("library/value_engineering_specialist.yaml")
+        .with_llm_config(llm_config)
+        .with_human_input_never()
+        .with_description(
+            "Optimizes costs, identifies value engineering opportunities, maximizes ROI"
+        )
+        .build()
+    )
 
     # Create a UserProxyAgent as the human client/stakeholder proxy
     #
@@ -98,30 +107,31 @@ def create_construction_team():
     # This demonstrates a sophisticated AG2 pattern: human problems → AI collaboration
     client = UserProxyAgent(
         name="client",
-        human_input_mode="NEVER",        # No human interaction during AI collaboration
-        max_consecutive_auto_reply=0,    # Present problem as human proxy, then step back
-        code_execution_config={"use_docker": False}  # Disable Docker requirement for code execution
+        human_input_mode="NEVER",  # No human interaction during AI collaboration
+        max_consecutive_auto_reply=0,  # Present problem as human proxy, then step back
+        code_execution_config={
+            "use_docker": False
+        },  # Disable Docker requirement for code execution
     )
 
     # Create GroupChat for team collaboration with AG2 best practices
     groupchat = GroupChat(
         agents=[client, project_manager, architect_specialist, value_engineer],
-        speaker_selection_method="auto", # Uses agent descriptions for selection
+        speaker_selection_method="auto",  # Uses agent descriptions for selection
         messages=[],
         max_round=10,
-        send_introductions=True  # Optional: agents introduce themselves
+        send_introductions=True,  # Optional: agents introduce themselves
     )
 
     # Create the GroupChatManager to coordinate - using same LLM config
     manager = GroupChatManager(
-        name="construction_manager",
-        groupchat=groupchat,
-        llm_config=llm_config
+        name="construction_manager", groupchat=groupchat, llm_config=llm_config
     )
 
     return client, manager
 
-def analyze_project_scenario():
+
+def analyze_project_scenario() -> None:
     """Example scenario: Analyzing a complex construction decision"""
 
     client, manager = create_construction_team()
@@ -149,22 +159,24 @@ def analyze_project_scenario():
     # 1. Client (UserProxyAgent) provides the complex scenario representing human stakeholder concerns
     # 2. GroupChatManager takes over, using agent descriptions to select speakers
     # 3. Three AI specialists collaborate autonomously to analyze the human's construction problem
-    client.initiate_chat(
-        manager,
-        message=scenario
-    )
+    client.initiate_chat(manager, message=scenario)
 
-def main():
+
+def main() -> None:
     """Demonstrate the construction team in action"""
 
     print("=" * 60)
     print("CONSTRUCTION TEAM COLLABORATION EXAMPLE")
     print("=" * 60)
     print("\nThis example demonstrates a hybrid conversation pattern:")
-    print("1. UserProxyAgent acts as proxy for a human client presenting a real construction challenges")
+    print(
+        "1. UserProxyAgent acts as proxy for a human client presenting a real construction challenges"
+    )
     print("2. Client steps back, while AI specialists collaborate autonomously")
     print("3. GroupChatManager orchestrates the discussion using agent descriptions")
-    print("4. This represents common real-world pattern: human problems → expert AI collaboration\n")
+    print(
+        "4. This represents common real-world pattern: human problems → expert AI collaboration\n"
+    )
 
     print("Three specialized construction agents work together:")
     print("• Project Manager: Timeline and coordination expertise")
@@ -185,6 +197,7 @@ def main():
         print('  OpenAI: pip install "ag2[openai]" && export OPENAI_API_KEY=key')
         print("  Ollama: pip install ag2 (local models, no API key needed)")
         print("          ollama pull tinyllama ; ollama serve")
+
 
 if __name__ == "__main__":
     main()

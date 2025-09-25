@@ -13,8 +13,8 @@ try:
     AG2_AVAILABLE = True
 except ImportError:
     # Fallback for development/testing without AG2
-    class ConversableAgent:
-        def __init__(self, name: str, system_message: str, **kwargs):
+    class ConversableAgent:  # type: ignore[no-redef]
+        def __init__(self, name: str, system_message: str, **kwargs: Any) -> None:
             self.name = name
             self.system_message = system_message
             self.llm_config = kwargs.get("llm_config", {})
@@ -92,10 +92,7 @@ class PersonaAgent(ConversableAgent):
 
         # Initialize parent ConversableAgent (inherits AG2's defaults)
         super().__init__(
-            name=name,
-            system_message=system_message,
-            description=description,
-            **kwargs
+            name=name, system_message=system_message, description=description, **kwargs
         )
 
     def _build_system_message(self) -> str:
@@ -181,8 +178,6 @@ class PersonaAgent(ConversableAgent):
             "backstory": self.backstory,
             "constraints": self.constraints,
         }
-
-
 
     def __repr__(self) -> str:
         """String representation of the agent."""
