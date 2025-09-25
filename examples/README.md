@@ -37,7 +37,7 @@ from ag2_persona import PersonaBuilder
 # Load a persona from YAML using PersonaBuilder
 agent = (PersonaBuilder("value_engineer")
          .from_yaml("library/value_engineering_specialist.yaml")
-         .with_llm_config({"model": "gpt-4", "temperature": 0.7})
+         .llm_config({"model": "gpt-4", "temperature": 0.7})
          .build())
 ```
 
@@ -54,17 +54,17 @@ llm_config = {"model": "gpt-4", "temperature": 0.7}
 # Load the construction team using PersonaBuilder
 pm = (PersonaBuilder("project_manager")
       .from_yaml("library/construction_project_manager.yaml")
-      .with_llm_config(llm_config)
+      .llm_config(llm_config)
       .build())
 
 arch = (PersonaBuilder("architect_specialist")
         .from_yaml("library/architectural_specialist.yaml")
-        .with_llm_config(llm_config)
+        .llm_config(llm_config)
         .build())
 
 ve = (PersonaBuilder("value_engineer")
       .from_yaml("library/value_engineering_specialist.yaml")
-      .with_llm_config(llm_config)
+      .llm_config(llm_config)
       .build())
 
 # Create GroupChat for collaboration

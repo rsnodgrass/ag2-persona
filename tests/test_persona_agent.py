@@ -192,7 +192,7 @@ class TestPersonaBuilder(unittest.TestCase):
         """Test basic PersonaBuilder usage."""
         from ag2_persona import PersonaBuilder
 
-        agent = PersonaBuilder("helper").with_role("Helper").with_goal("Assist users").build()
+        agent = PersonaBuilder("helper").role("Helper").goal("Assist users").build()
 
         self.assertIsInstance(agent, PersonaAgent)
         self.assertEqual(agent.role, "Helper")

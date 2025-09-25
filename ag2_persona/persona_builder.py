@@ -22,7 +22,7 @@ class PersonaBuilder:
     Example:
         >>> agent = (PersonaBuilder("analyst")
         ...           .from_yaml("analyst.yaml")
-        ...           .with_llm_config({"model": "gpt-4"})
+        ...           .llm_config({"model": "gpt-4"})
         ...           .add_constraint("Focus on statistical significance")
         ...           .build())
     """
@@ -35,50 +35,50 @@ class PersonaBuilder:
             name: Unique identifier for the agent
         """
         self.name = name
-        self.role: str | None = None
-        self.goal: str | None = None
-        self.backstory: str = ""
-        self.constraints: list[str] = []
-        self.llm_config: dict[str, Any] | None = None
-        self.description: str | None = None
+        self._role: str | None = None
+        self._goal: str | None = None
+        self._backstory: str = ""
+        self._constraints: list[str] = []
+        self._llm_config: dict[str, Any] | None = None
+        self._description: str | None = None
         self.additional_kwargs: dict[str, Any] = {}
 
-    def with_role(self, role: str) -> "PersonaBuilder":
+    def role(self, role: str) -> "PersonaBuilder":
         """Set the persona's role or title."""
-        self.role = role
+        self._role = role
         return self
 
-    def with_goal(self, goal: str) -> "PersonaBuilder":
+    def goal(self, goal: str) -> "PersonaBuilder":
         """Set the persona's objective or goal."""
-        self.goal = goal
+        self._goal = goal
         return self
 
-    def with_backstory(self, backstory: str) -> "PersonaBuilder":
+    def backstory(self, backstory: str) -> "PersonaBuilder":
         """Set the persona's background and expertise."""
-        self.backstory = backstory
+        self._backstory = backstory
         return self
 
     def add_constraint(self, constraint: str) -> "PersonaBuilder":
         """Add a single constraint or rule for the agent."""
-        if constraint and constraint not in self.constraints:
-            self.constraints.append(constraint)
+        if constraint and constraint not in self._constraints:
+            self._constraints.append(constraint)
         return self
 
-    def with_constraints(self, constraints: list[str]) -> "PersonaBuilder":
+    def constraints(self, constraints: list[str]) -> "PersonaBuilder":
         """Set multiple constraints at once, replacing any existing constraints."""
-        self.constraints = constraints
+        self._constraints = constraints
         return self
 
-    def with_llm_config(self, config: dict[str, Any]) -> "PersonaBuilder":
+    def llm_config(self, config: dict[str, Any]) -> "PersonaBuilder":
         """Set the LLM configuration for the agent."""
-        self.llm_config = config
+        self._llm_config = config
         return self
 
-    def with_temperature(self, temp: float) -> "PersonaBuilder":
+    def temperature(self, temp: float) -> "PersonaBuilder":
         """Convenience method to set just the temperature in LLM config."""
-        if not self.llm_config:
-            self.llm_config = {}
-        self.llm_config["temperature"] = temp
+        if not self._llm_config:
+            self._llm_config = {}
+        self._llm_config["temperature"] = temp
         return self
 
     def with_human_input_never(self) -> "PersonaBuilder":
@@ -96,9 +96,9 @@ class PersonaBuilder:
         self.additional_kwargs["human_input_mode"] = "TERMINATE"
         return self
 
-    def with_description(self, description: str) -> "PersonaBuilder":
+    def description(self, description: str) -> "PersonaBuilder":
         """Set description for GroupChat agent selection."""
-        self.description = description
+        self._description = description
         return self
 
     def with_kwargs(self, **kwargs: Any) -> "PersonaBuilder":
@@ -126,15 +126,15 @@ class PersonaBuilder:
             raise ValueError(f"Configuration must be a dictionary for persona '{self.name}'")
 
         # Load persona attributes (but not llm_config)
-        self.role = config_dict.get("role")
-        self.goal = config_dict.get("goal")
-        self.backstory = config_dict.get("backstory", "")
-        self.constraints = config_dict.get("constraints", [])
+        self._role = config_dict.get("role")
+        self._goal = config_dict.get("goal")
+        self._backstory = config_dict.get("backstory", "")
+        self._constraints = config_dict.get("constraints", [])
 
         # Validate constraints format
-        if self.constraints and not isinstance(self.constraints, list):
+        if self._constraints and not isinstance(self._constraints, list):
             raise ValueError(
-                f"Constraints must be a list for persona '{self.name}', got {type(self.constraints)}"
+                f"Constraints must be a list for persona '{self.name}', got {type(self._constraints)}"
             )
 
         return self
@@ -180,10 +180,10 @@ class PersonaBuilder:
 
     def extend_goal(self, additional_goal: str) -> "PersonaBuilder":
         """Extend the existing goal with additional requirements."""
-        if self.goal:
-            self.goal = f"{self.goal}. Additionally, {additional_goal}"
+        if self._goal:
+            self._goal = f"{self._goal}. Additionally, {additional_goal}"
         else:
-            self.goal = additional_goal
+            self._goal = additional_goal
         return self
 
     def validate(self) -> "PersonaBuilder":
@@ -196,24 +196,24 @@ class PersonaBuilder:
 
         if not self.name:
             errors.append("Persona name is required")
-        if not self.role:
+        if not self._role:
             errors.append(f"Role is required for persona '{self.name}'")
-        if not self.goal:
+        if not self._goal:
             errors.append(f"Goal is required for persona '{self.name}'")
 
         # Validate constraints format
-        if self.constraints and not isinstance(self.constraints, list):
+        if self._constraints and not isinstance(self._constraints, list):
             errors.append(
-                f"Constraints must be a list for persona '{self.name}', got {type(self.constraints)}"
+                f"Constraints must be a list for persona '{self.name}', got {type(self._constraints)}"
             )
 
         # Validate LLM config structure if provided
-        if self.llm_config is not None:
-            if not isinstance(self.llm_config, dict):
+        if self._llm_config is not None:
+            if not isinstance(self._llm_config, dict):
                 errors.append(
-                    f"LLM config must be a dictionary for persona '{self.name}', got {type(self.llm_config)}"
+                    f"LLM config must be a dictionary for persona '{self.name}', got {type(self._llm_config)}"
                 )
-            elif not any(key in self.llm_config for key in ("config_list", "model")):
+            elif not any(key in self._llm_config for key in ("config_list", "model")):
                 errors.append(
                     f"LLM config must contain 'config_list' or 'model' for persona '{self.name}'"
                 )
@@ -243,27 +243,27 @@ class PersonaBuilder:
         self.validate()
 
         # After validation, these should be guaranteed to exist
-        assert self.role is not None, "Role should be set after validation"
-        assert self.goal is not None, "Goal should be set after validation"
+        assert self._role is not None, "Role should be set after validation"
+        assert self._goal is not None, "Goal should be set after validation"
 
         return PersonaAgent(
             name=self.name,
-            role=self.role,
-            goal=self.goal,
-            backstory=self.backstory,
-            constraints=self.constraints,
-            description=self.description,
-            llm_config=self.llm_config,
+            role=self._role,
+            goal=self._goal,
+            backstory=self._backstory,
+            constraints=self._constraints,
+            description=self._description,
+            llm_config=self._llm_config,
             **self.additional_kwargs,
         )
 
     def __repr__(self) -> str:
         """String representation of the builder."""
-        if self.goal is None:
+        if self._goal is None:
             goal_display = "None"
-        elif len(self.goal) > 30:
-            goal_display = f"'{self.goal[:30]}...'"
+        elif len(self._goal) > 30:
+            goal_display = f"'{self._goal[:30]}...'"
         else:
-            goal_display = f"'{self.goal}'"
+            goal_display = f"'{self._goal}'"
 
-        return f"PersonaBuilder(name='{self.name}', role='{self.role}', goal={goal_display})"
+        return f"PersonaBuilder(name='{self.name}', role='{self._role}', goal={goal_display})"

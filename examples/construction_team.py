@@ -72,7 +72,7 @@ def create_construction_team() -> tuple[UserProxyAgent, GroupChatManager]:
     project_manager = (
         PersonaBuilder("project_manager")
         .from_yaml("library/construction_project_manager.yaml")
-        .with_llm_config(llm_config)
+        .llm_config(llm_config)
         .with_human_input_never()
         .build()
     )
@@ -80,7 +80,7 @@ def create_construction_team() -> tuple[UserProxyAgent, GroupChatManager]:
     architect_specialist = (
         PersonaBuilder("architect_specialist")
         .from_yaml("library/architectural_specialist.yaml")
-        .with_llm_config(llm_config)
+        .llm_config(llm_config)
         .with_human_input_never()
         .build()
     )
@@ -88,9 +88,9 @@ def create_construction_team() -> tuple[UserProxyAgent, GroupChatManager]:
     value_engineer = (
         PersonaBuilder("value_engineer")
         .from_yaml("library/value_engineering_specialist.yaml")
-        .with_llm_config(llm_config)
+        .llm_config(llm_config)
         .with_human_input_never()
-        .with_description(
+        .description(
             "Optimizes costs, identifies value engineering opportunities, maximizes ROI"
         )
         .build()

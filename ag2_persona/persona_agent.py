@@ -134,7 +134,7 @@ class PersonaAgent(ConversableAgent):
             >>> agent.update_goal("Focus on performance optimization")
         """
         self.goal = new_goal
-        self.system_message = self._build_system_message()
+        self.update_system_message(self._build_system_message())
 
     def add_constraint(self, constraint: str) -> None:
         """
@@ -148,7 +148,7 @@ class PersonaAgent(ConversableAgent):
         """
         if constraint not in self.constraints:
             self.constraints.append(constraint)
-            self.system_message = self._build_system_message()
+            self.update_system_message(self._build_system_message())
 
     def remove_constraint(self, constraint: str) -> None:
         """
@@ -159,7 +159,7 @@ class PersonaAgent(ConversableAgent):
         """
         if constraint in self.constraints:
             self.constraints.remove(constraint)
-            self.system_message = self._build_system_message()
+            self.update_system_message(self._build_system_message())
 
     def to_dict(self) -> dict[str, Any]:
         """

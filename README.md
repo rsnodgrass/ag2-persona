@@ -7,7 +7,17 @@
 
 ## Why This Matters
 
-[AG2 (AutoGen)](https://ag2.ai/) agents currently mix role, purpose, and context into a single unstructured `system_message`, which is fantastic flexibility but does not propose an common pattern for agents to authentically embody distinct personas. PersonaAgent enables agents to adopt rich, well-defined characters through explicit `role`, `goal`, and `backstory` components, allowing for more authentic and consistent agent behavior while maintaining full compatibility with all that AG2 offers.
+[AG2 (AutoGen)](https://ag2.ai/) agents currently mix role, purpose, and context into a single unstructured `system_message`, which is fantastic flexibility but does not propose a common pattern for agents to authentically embody distinct personas. PersonaAgent enables agents to adopt rich, well-defined characters through explicit `role`, `goal`, and `backstory` components.
+
+**The real power comes from the PersonaBuilder YAML library pattern:** Load expert personas from configuration files, enabling domain experts to define agent behavior while developers handle runtime integration. This separation provides:
+
+- **🔄 Reusability**: Share persona definitions across projects and teams
+- **🛠️ Maintainability**: Update agent behavior without touching code
+- **👥 Non-developer friendly**: Subject matter experts can edit YAML files directly
+- **📝 Version control**: Track persona evolution and collaborate on definitions
+- **⚡ Separation of concerns**: Stable persona definition vs variable runtime config
+
+Perfect for teams where domain experts define the "who" while developers handle the "how".
 
 ### The Problem
 
@@ -71,50 +81,34 @@ expert = PersonaAgent(
 response = expert.generate_reply(messages=[{"content": "Analyze this sales data"}])
 ```
 
-### Dynamic Goal Updates
+### YAML Persona Library Pattern (Recommended)
+
+The most powerful approach is loading pre-defined personas from YAML files. This enables domain experts to define agent behavior while developers handle runtime integration:
 
 ```python
-# Create agent with initial goal
-agent = PersonaAgent(
-    name="assistant",
-    role="AI Assistant",
-    goal="Help with general questions"
-)
-
-# Update goal for specific task
-agent.update_goal("Focus on technical documentation writing")
-# The system message is automatically regenerated
-```
-
-### Team Composition
-
-```python
-from ag2_persona import PersonaAgent
+from ag2_persona import PersonaBuilder
 from autogen import GroupChat, GroupChatManager
 
-# Create a research team with persona agents
-lead_scientist = PersonaAgent(
-    name="lead_scientist",
-    role="Research Lead",
-    goal="Design experiments and coordinate research objectives",
-    backstory="PhD in biology with 15 years of research experience"
-)
+# Load domain expert personas from YAML library
+lead_scientist = (PersonaBuilder("lead_scientist")
+                 .from_yaml("library/research_team_lead.yaml")
+                 .llm_config({"model": "gpt-4", "temperature": 0.7})
+                 .build())
 
-data_analyst = PersonaAgent(
-    name="data_analyst",
-    role="Data Scientist",
-    goal="Analyze experimental data and generate statistical insights",
-    backstory="Expert in statistical modeling and machine learning"
-)
+data_analyst = (PersonaBuilder("data_analyst")
+               .from_yaml("library/senior_data_engineer.yaml")
+               .llm_config({"model": "gpt-4", "temperature": 0.5})
+               .build())
 
-lab_technician = PersonaAgent(
-    name="lab_tech",
-    role="Laboratory Technician",
-    goal="Execute experiments and ensure quality control",
-    constraints=["Follow safety protocols", "Document all procedures"]
-)
+# Manual construction when YAML doesn't exist yet
+lab_technician = (PersonaBuilder("lab_tech")
+                 .role("Laboratory Technician")
+                 .goal("Execute experiments and ensure quality control")
+                 .constraints(["Follow safety protocols", "Document all procedures"])
+                 .llm_config({"model": "gpt-4", "temperature": 0.3})
+                 .build())
 
-# Use in GroupChat as normal
+# Use in GroupChat - personas are consistent and reusable
 groupchat = GroupChat(
     agents=[lead_scientist, data_analyst, lab_technician],
     messages=[],
@@ -122,6 +116,12 @@ groupchat = GroupChat(
 )
 manager = GroupChatManager(groupchat)
 ```
+
+**Benefits:**
+- Domain experts edit YAML files, developers handle runtime
+- Personas are shared across projects and teams
+- Updates don't require code changes
+- Version control tracks persona evolution
 
 ## API Reference
 
@@ -167,18 +167,21 @@ agent.update_goal("Review only the security aspects of the code")
 - `constraints` (List[str]): The agent's constraints
 - `system_message` (str): The composed system message (inherited)
 
-### Creating Agents from Configuration
+### PersonaBuilder: YAML Library Pattern (Recommended)
 
-#### `PersonaBuilder` (Recommended)
-
-Create persona agents with validation and flexible configuration:
+PersonaBuilder's strength is loading expert personas from YAML files. This enables domain experts to define agent behavior while developers handle runtime integration:
 
 ```python
 from ag2_persona import PersonaBuilder
 
-# From dictionary
-config = {
-    "name": "bioinformatics_specialist",
+# Primary pattern: Load expert personas from YAML library
+expert = (PersonaBuilder("bioinformatics_specialist")
+          .from_yaml("library/bioinformatics_specialist.yaml")
+          .llm_config({"model": "gpt-4", "temperature": 0.5})
+          .build())
+
+# Alternative: Load from dictionary (for dynamic configuration)
+persona_config = {
     "role": "Bioinformatics Specialist",
     "goal": "Analyze genomic sequences and identify patterns",
     "backstory": "PhD in computational biology with expertise in sequence analysis",
@@ -186,17 +189,19 @@ config = {
 }
 
 agent = (PersonaBuilder("bioinformatics_specialist")
-         .from_dict(config)
-         .with_llm_config({"model": "gpt-4", "temperature": 0.5})
+         .from_dict(persona_config)
+         .llm_config({"model": "gpt-4", "temperature": 0.5})
          .build())
 
-# Or from YAML file
+# Manual construction (when no YAML exists yet)
 agent = (PersonaBuilder("bioinformatics_specialist")
-         .from_yaml("specialists/bioinformatics.yaml")
-         .with_llm_config({"model": "gpt-4", "temperature": 0.5})
+         .role("Bioinformatics Specialist")
+         .goal("Analyze genomic sequences and identify patterns")
+         .backstory("PhD in computational biology with expertise in sequence analysis")
+         .constraints(["Use validated algorithms", "Ensure reproducibility"])
+         .llm_config({"model": "gpt-4", "temperature": 0.5})
          .build())
 ```
-
 
 ## Migration Guide
 
@@ -217,18 +222,17 @@ agent = ConversableAgent(
 
 **After:**
 ```python
-agent = PersonaAgent(
-    name="researcher",
-    role="Marine Biology Researcher",
-    goal="Analyze oceanographic data to identify coral health patterns",
-    backstory="You have 8 years of experience studying coral reef ecosystems",
-    constraints=[
-        "Focus on temperature and pH correlations",
-        "Always cite relevant scientific literature",
-        "Follow peer review standards"
-    ],
-    llm_config=config
-)
+agent = (PersonaBuilder("researcher")
+         .role("Marine Biology Researcher")
+         .goal("Analyze oceanographic data to identify coral health patterns")
+         .backstory("You have 8 years of experience studying coral reef ecosystems")
+         .constraints([
+             "Focus on temperature and pH correlations",
+             "Always cite relevant scientific literature",
+             "Follow peer review standards"
+         ])
+         .llm_config(config)
+         .build())
 ```
 
 ### Compared to CrewAI
@@ -246,13 +250,12 @@ agent = Agent(
 
 **AG2 PersonaAgent:**
 ```python
-agent = PersonaAgent(
-    name="climate_scientist",
-    role="Climate Scientist",
-    goal="Analyze climate data and predict weather patterns",
-    backstory="You are a climate scientist with expertise in atmospheric modeling",
-    llm_config={"model": "gpt-4"}
-)
+agent = (PersonaBuilder("climate_scientist")
+         .role("Climate Scientist")
+         .goal("Analyze climate data and predict weather patterns")
+         .backstory("You are a climate scientist with expertise in atmospheric modeling")
+         .llm_config({"model": "gpt-4"})
+         .build())
 ```
 
 ## Examples
@@ -298,7 +301,7 @@ A: Pass additional `system_message` in kwargs - it gets appended.
 A: Yes, all ConversableAgent features including function calling work normally.
 
 **Q: What is the best way to load PersonaAgents from config instead of hardcoded?**
-A: Use `PersonaBuilder` with `.from_yaml()` or `.from_dict()`. This provides validation, flexible configuration, and separates persona definition from runtime LLM config. Example: `PersonaBuilder("agent").from_yaml("config.yaml").with_llm_config(llm_config).build()`
+A: Use `PersonaBuilder` with `.from_yaml()` or `.from_dict()`. This provides validation, flexible configuration, and separates persona definition from runtime LLM config. Example: `PersonaBuilder("agent").from_yaml("config.yaml").llm_config(llm_config).build()`
 
 **Q: How do I contribute improvements?**
 A: Submit PRs to enhance the structure while maintaining backward compatibility.
