@@ -1,5 +1,10 @@
 # PersonaAgent for AG2: Enabling Distinct Character Embodiment
 
+[![PyPi](https://img.shields.io/pypi/v/ag2-persona.svg)](https://pypi.python.org/pypi/ag2-person)
+[![MIT license](http://img.shields.io/badge/license-MIT-brightgreen.svg)](http://opensource.org/licenses/MIT)
+[![Build Status](https://github.com/rsnodgrass/ag2-persona/actions/workflows/ci.yml/badge.svg)](https://github.com/rsnodgrass/ag2-persona/actions/workflows/ci.yml)
+
+
 ## Why This Matters
 
 [AG2 (AutoGen)](https://ag2.ai/) agents currently mix role, purpose, and context into a single unstructured `system_message`, which is fantastic flexibility but does not propose an common pattern for agents to authentically embody distinct personas. PersonaAgent enables agents to adopt rich, well-defined characters through explicit `role`, `goal`, and `backstory` components, allowing for more authentic and consistent agent behavior while maintaining full compatibility with all that AG2 offers.
