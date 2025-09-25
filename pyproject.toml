@@ -1,18 +1,17 @@
 [build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "ag2-persona"
 version = "0.1.1"
 description = "Persona-based agents for AG2 (AutoGen) - enabling distinct character embodiment"
 readme = "README.md"
-license = "MIT"
 authors = [
-    {name = "Ryan Snodgrass", email = "ryan@snodgrass.dev"}
+    {name = "Ryan Snodgrass", email = "rsnodgrass@gmail.com"}
 ]
 maintainers = [
-    {name = "Ryan Snodgrass", email = "ryan@snodgrass.dev"}
+    {name = "Ryan Snodgrass", email = "rsnodgrass@gmail.com"}
 ]
 keywords = ["ag2", "autogen", "llm", "agents", "persona", "character", "roleplay"]
 classifiers = [
