@@ -81,9 +81,9 @@ expert = PersonaAgent(
 response = expert.generate_reply(messages=[{"content": "Analyze this sales data"}])
 ```
 
-### YAML Persona Library Pattern (Recommended)
+### Team Composition with PersonaBuilder
 
-The most powerful approach is loading pre-defined personas from YAML files. This enables domain experts to define agent behavior while developers handle runtime integration:
+Build multi-agent teams by loading expert personas from YAML files. This enables domain experts to define agent behavior while developers handle runtime integration:
 
 ```python
 from ag2_persona import PersonaBuilder
@@ -167,9 +167,9 @@ agent.update_goal("Review only the security aspects of the code")
 - `constraints` (List[str]): The agent's constraints
 - `system_message` (str): The composed system message (inherited)
 
-### PersonaBuilder: YAML Library Pattern (Recommended)
+### PersonaBuilder Methods
 
-PersonaBuilder's strength is loading expert personas from YAML files. This enables domain experts to define agent behavior while developers handle runtime integration:
+PersonaBuilder supports three construction patterns for different use cases:
 
 ```python
 from ag2_persona import PersonaBuilder
@@ -286,22 +286,58 @@ cd examples/
 python construction_team.py
 ```
 
-## FAQ
+## Frequently Asked Questions
 
-**Q: Does this replace ConversableAgent?**
-A: No, it extends it. All ConversableAgent features still work.
+<details>
+<summary><strong>Does this replace ConversableAgent?</strong></summary>
 
-**Q: Can I mix PersonaAgent with regular agents?**
-A: Yes, they're fully compatible in group chats and conversations.
+No, PersonaAgent extends ConversableAgent. All existing ConversableAgent features work exactly as before, including function calling, human input modes, and group chats.
+</details>
 
-**Q: What if I need custom system message formatting?**
-A: Pass additional `system_message` in kwargs - it gets appended.
+<details>
+<summary><strong>Can I mix PersonaAgent with regular AG2 agents?</strong></summary>
 
-**Q: Does this work with function calling?**
-A: Yes, all ConversableAgent features including function calling work normally.
+Yes! PersonaAgents are fully compatible with regular ConversableAgents in group chats and conversations. You can gradually adopt PersonaAgent without changing your existing setup.
+</details>
 
-**Q: What is the best way to load PersonaAgents from config instead of hardcoded?**
-A: Use `PersonaBuilder` with `.from_yaml()` or `.from_dict()`. This provides validation, flexible configuration, and separates persona definition from runtime LLM config. Example: `PersonaBuilder("agent").from_yaml("config.yaml").llm_config(llm_config).build()`
+<details>
+<summary><strong>What if I need custom system message formatting?</strong></summary>
 
-**Q: How do I contribute improvements?**
-A: Submit PRs to enhance the structure while maintaining backward compatibility.
+Pass additional `system_message` content via kwargs - it gets appended to the generated persona message:
+
+```python
+agent = PersonaAgent(
+    name="reviewer",
+    role="Code Reviewer",
+    goal="Review code quality",
+    system_message="Additional custom instructions here",
+    llm_config=config
+)
+```
+</details>
+
+<details>
+<summary><strong>What's the best way to load personas from configuration?</strong></summary>
+
+Use PersonaBuilder with YAML files for maximum flexibility:
+
+```python
+# Recommended: YAML library pattern
+agent = (PersonaBuilder("expert")
+         .from_yaml("library/domain_expert.yaml")
+         .llm_config({"model": "gpt-4", "temperature": 0.7})
+         .build())
+```
+
+This separates persona definition (stable, edited by domain experts) from runtime configuration (variable, handled by developers).
+</details>
+
+<details>
+<summary><strong>How do I contribute improvements?</strong></summary>
+
+Submit pull requests that enhance functionality while maintaining backward compatibility. Focus on:
+- New persona library entries
+- Additional PersonaBuilder methods
+- Documentation improvements
+- Bug fixes and performance enhancements
+</details>
