@@ -283,7 +283,8 @@ from crewai import Agent
 agent = Agent(
     role="Climate Scientist",
     goal="Analyze climate data and predict weather patterns",
-    backstory="You are a climate scientist with expertise in atmospheric modeling"
+    backstory="You are a climate scientist with expertise in atmospheric modeling",
+    llm={"model": "gpt-4"}
 )
 ```
 
