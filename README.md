@@ -204,13 +204,13 @@ PersonaBuilder supports three construction patterns for different use cases:
 ```python
 from ag2_persona import PersonaBuilder
 
-# Primary pattern: Load expert personas from YAML library
+# Option 1: Load expert personas from YAML library
 expert = (PersonaBuilder("bioinformatics_specialist")
           .from_yaml("library/bioinformatics_specialist.yaml")
           .llm_config({"model": "gpt-4", "temperature": 0.5})
           .build())
 
-# Alternative: Load from dictionary (for dynamic configuration)
+# Option 2: Construct from dictionary
 persona_config = {
     "role": "Bioinformatics Specialist",
     "goal": "Analyze genomic sequences and identify patterns",
@@ -223,7 +223,7 @@ agent = (PersonaBuilder("bioinformatics_specialist")
          .llm_config({"model": "gpt-4", "temperature": 0.5})
          .build())
 
-# Manual construction (when no YAML exists yet)
+# Option 3: Manual construction
 agent = (PersonaBuilder("bioinformatics_specialist")
          .role("Bioinformatics Specialist")
          .goal("Analyze genomic sequences and identify patterns")
