@@ -9,13 +9,6 @@ from typing import Any, Optional
 from pathlib import Path
 
 
-class HumanInputMode:
-    """Constants for AG2 ConversableAgent human_input_mode parameter."""
-    NEVER = "NEVER"
-    ALWAYS = "ALWAYS"
-    TERMINATE = "TERMINATE"
-
-
 class PersonaBuilder:
     """
     Builder pattern for creating PersonaAgent instances with validation and flexibility.
@@ -141,24 +134,36 @@ class PersonaBuilder:
         self.llm_config["temperature"] = temp
         return self
 
-    def with_human_input_mode(self, mode: str) -> "PersonaBuilder":
+    def with_human_input_never(self) -> "PersonaBuilder":
         """
-        Set human input mode for the agent.
-
-        Args:
-            mode: Human input mode (use HumanInputMode.NEVER, HumanInputMode.ALWAYS, or HumanInputMode.TERMINATE)
+        Set agent to never prompt for human input.
 
         Returns:
             PersonaBuilder: Self for method chaining
-
-        Example:
-            >>> builder.with_human_input_mode(HumanInputMode.NEVER)
         """
-        valid_modes = {HumanInputMode.NEVER, HumanInputMode.ALWAYS, HumanInputMode.TERMINATE}
-        if mode not in valid_modes:
-            raise ValueError(f"Invalid human_input_mode '{mode}'. Must be one of: {', '.join(valid_modes)}")
+        self.additional_kwargs["human_input_mode"] = "NEVER"
+        return self
 
-        self.additional_kwargs["human_input_mode"] = mode
+    def with_human_input_always(self) -> "PersonaBuilder":
+        """
+        Set agent to always prompt for human input.
+
+        Returns:
+            PersonaBuilder: Self for method chaining
+        """
+        self.additional_kwargs["human_input_mode"] = "ALWAYS"
+        return self
+
+    def with_human_input_terminate(self) -> "PersonaBuilder":
+        """
+        Set agent to prompt for human input only on termination.
+
+        This is the default AG2 ConversableAgent behavior.
+
+        Returns:
+            PersonaBuilder: Self for method chaining
+        """
+        self.additional_kwargs["human_input_mode"] = "TERMINATE"
         return self
 
     def with_description(self, description: str) -> "PersonaBuilder":

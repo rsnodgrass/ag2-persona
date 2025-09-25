@@ -32,58 +32,81 @@ from pathlib import Path
 # Add the parent directory to path to import local ag2_persona
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from ag2_persona import PersonaAgent, HumanInputMode
+from ag2_persona import PersonaAgent
 from ag2_persona.persona_builder import PersonaBuilder
 from autogen import GroupChat, GroupChatManager, UserProxyAgent
 
 def create_construction_team():
-    """Create a team of construction specialists using PersonaBuilder"""
+    """
+    Create a team of construction specialists using PersonaBuilder.
 
-    # Define LLM config once for all agents (Ollama with Gemma2:2b)
+    This creates a hybrid conversation pattern where UserProxyAgent serves as human stakeholder proxy:
+    1. Client (UserProxyAgent) represents the human stakeholder with real construction challenges
+    2. Client presents complex scenario with business constraints, then steps back (max_consecutive_auto_reply=0)
+    3. Three AI specialists collaborate autonomously to analyze the human's problem
+    4. GroupChatManager orchestrates using agent descriptions for speaker selection
+
+    The UserProxyAgent here acts as a "human client proxy" - it doesn't require human input,
+    but conceptually represents the human perspective and constraints in the collaborative discussion.
+
+    Returns:
+        tuple: (client_initiator, group_manager) for starting collaborative discussions
+    """
+
+    # Define LLM config once for all agents (Ollama with Tinyllama just for fast demo)
     llm_config = {
         "config_list": [
             {
-                "model": "gemma2:2b",
+                "model": "tinyllama",
                 "base_url": "http://localhost:11434/v1",
                 "api_key": "ollama",  # placeholder for Ollama
+                "price": [0, 0]  # Free local model - suppresses cost warnings
             }
         ],
         "temperature": 0.3
     }
 
-    # Create construction specialists using PersonaBuilder with AG2 best practices
+    # Create set of construction specialists for evaluating projects
+    # using PersonaBuilder along with AG2 best practices.
     project_manager = (PersonaBuilder("project_manager")
                        .from_yaml("library/construction_project_manager.yaml")
                        .with_llm_config(llm_config)
-                       .with_human_input_mode(HumanInputMode.NEVER)
-                       .with_description("Manages project timelines, coordinates trades, resolves scheduling conflicts")
+                       .with_human_input_never()
                        .build())
 
     architect_specialist = (PersonaBuilder("architect_specialist")
                            .from_yaml("library/architectural_specialist.yaml")
                            .with_llm_config(llm_config)
-                           .with_human_input_mode(HumanInputMode.NEVER)
-                           .with_description("Reviews architectural plans, identifies conflicts, ensures buildability")
+                           .with_human_input_never()
                            .build())
 
     value_engineer = (PersonaBuilder("value_engineer")
                      .from_yaml("library/value_engineering_specialist.yaml")
                      .with_llm_config(llm_config)
-                     .with_human_input_mode(HumanInputMode.NEVER)
+                     .with_human_input_never()
                      .with_description("Optimizes costs, identifies value engineering opportunities, maximizes ROI")
                      .build())
 
-    # Create a user proxy to represent the client/owner
+    # Create a UserProxyAgent as the human client/stakeholder proxy
+    #
+    # Why UserProxyAgent is Perfect Here:
+    # - Conceptually represents the human client with real construction challenges
+    # - Acts as a proxy for human stakeholder interests and constraints
+    # - Brings real-world problems to the expert AI team for collaborative analysis
+    # - Steps back after problem presentation to let specialists work autonomously
+    #
+    # This demonstrates a sophisticated AG2 pattern: human problems → AI collaboration
     client = UserProxyAgent(
         name="client",
-        human_input_mode="NEVER",
-        max_consecutive_auto_reply=0
+        human_input_mode="NEVER",        # No human interaction during AI collaboration
+        max_consecutive_auto_reply=0,    # Present problem as human proxy, then step back
+        code_execution_config={"use_docker": False}  # Disable Docker requirement for code execution
     )
 
     # Create GroupChat for team collaboration with AG2 best practices
     groupchat = GroupChat(
         agents=[client, project_manager, architect_specialist, value_engineer],
-        speaker_selection_method="auto",  # Uses agent descriptions for selection
+        speaker_selection_method="auto", # Uses agent descriptions for selection
         messages=[],
         max_round=10,
         send_introductions=True  # Optional: agents introduce themselves
@@ -122,7 +145,10 @@ def analyze_project_scenario():
     timeline, and budget constraints?
     """
 
-    # Initiate the group discussion
+    # Start the hybrid conversation pattern using UserProxyAgent as human client proxy:
+    # 1. Client (UserProxyAgent) provides the complex scenario representing human stakeholder concerns
+    # 2. GroupChatManager takes over, using agent descriptions to select speakers
+    # 3. Three AI specialists collaborate autonomously to analyze the human's construction problem
     client.initiate_chat(
         manager,
         message=scenario
@@ -134,11 +160,16 @@ def main():
     print("=" * 60)
     print("CONSTRUCTION TEAM COLLABORATION EXAMPLE")
     print("=" * 60)
-    print("\nThis example shows how three specialized construction agents")
-    print("work together to solve complex project challenges:\n")
-    print("• Project Manager: Focus on timeline and coordination")
-    print("• Architectural Specialist: Ensure buildability and code compliance")
-    print("• Value Engineering: Optimize costs and ROI\n")
+    print("\nThis example demonstrates a hybrid conversation pattern:")
+    print("1. UserProxyAgent acts as proxy for a human client presenting a real construction challenges")
+    print("2. Client steps back, while AI specialists collaborate autonomously")
+    print("3. GroupChatManager orchestrates the discussion using agent descriptions")
+    print("4. This represents common real-world pattern: human problems → expert AI collaboration\n")
+
+    print("Three specialized construction agents work together:")
+    print("• Project Manager: Timeline and coordination expertise")
+    print("• Architectural Specialist: Design buildability and code compliance")
+    print("• Value Engineering: Cost optimization and ROI analysis\n")
     print("-" * 60)
 
     try:
@@ -153,6 +184,7 @@ def main():
         print("\nInstallation options:")
         print('  OpenAI: pip install "ag2[openai]" && export OPENAI_API_KEY=key')
         print("  Ollama: pip install ag2 (local models, no API key needed)")
+        print("          ollama pull tinyllama ; ollama serve")
 
 if __name__ == "__main__":
     main()

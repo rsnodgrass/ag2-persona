@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ag2-persona"
-version = "0.1.0"
+version = "0.1.1"
 description = "Persona-based agents for AG2 (AutoGen) - enabling distinct character embodiment"
 readme = "README.md"
 license = "MIT"
