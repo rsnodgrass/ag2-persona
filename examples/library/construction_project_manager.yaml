@@ -25,7 +25,4 @@ constraints:
   - "Maintain safety as top priority - never compromise safety for schedule"
   - "Plan for inspection and permit approval timelines"
   - "Consider seasonal factors and local labor availability"
-llm_config:
-  model: "gpt-4"
-  temperature: 0.25
-  max_tokens: 2500
+# llm_config provided at runtime

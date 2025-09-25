@@ -56,6 +56,7 @@ class PersonaAgent(ConversableAgent):
         goal: str,
         backstory: str = "",
         constraints: list[str] | None = None,
+        description: str | None = None,
         **kwargs: Any,
     ):
         """
@@ -67,7 +68,8 @@ class PersonaAgent(ConversableAgent):
             goal: What the agent should accomplish
             backstory: Optional background, expertise, or context
             constraints: Optional list of rules or limitations
-            **kwargs: Additional ConversableAgent parameters (llm_config, etc.)
+            description: Short description for GroupChat agent selection (defaults to role + goal)
+            **kwargs: Additional ConversableAgent parameters (llm_config, human_input_mode, etc.)
         """
         # Store structured components as properties
         self.role = role
@@ -78,14 +80,23 @@ class PersonaAgent(ConversableAgent):
         # Build the structured system message
         system_message = self._build_system_message()
 
+        # Generate description for GroupChat if not provided
+        if description is None:
+            description = f"{self.role}: {self.goal}"
+
         # Handle any additional system_message in kwargs
         # This maintains backward compatibility
         if "system_message" in kwargs:
             additional = kwargs.pop("system_message")
             system_message = f"{system_message}\n\nAdditional Instructions:\n{additional}"
 
-        # Initialize parent ConversableAgent
-        super().__init__(name=name, system_message=system_message, **kwargs)
+        # Initialize parent ConversableAgent (inherits AG2's defaults)
+        super().__init__(
+            name=name,
+            system_message=system_message,
+            description=description,
+            **kwargs
+        )
 
     def _build_system_message(self) -> str:
         """
@@ -155,12 +166,13 @@ class PersonaAgent(ConversableAgent):
 
     def to_dict(self) -> dict[str, Any]:
         """
-        Export the agent's configuration as a dictionary.
+        Export the agent's persona configuration as a dictionary.
 
-        Useful for serialization, saving, or creating similar agents.
+        Note: This excludes llm_config as it should be provided at runtime.
+        Use PersonaBuilder.from_dict(agent.to_dict()) to recreate the agent.
 
         Returns:
-            dict: Agent configuration including all structured components
+            dict: Persona configuration (role, goal, backstory, constraints)
         """
         return {
             "name": self.name,
@@ -168,33 +180,8 @@ class PersonaAgent(ConversableAgent):
             "goal": self.goal,
             "backstory": self.backstory,
             "constraints": self.constraints,
-            "llm_config": self.llm_config,
-            "system_message": self.system_message,
         }
 
-    @classmethod
-    def from_dict(cls, config: dict[str, Any]) -> "PersonaAgent":
-        """
-        Create a PersonaAgent from a configuration dictionary.
-
-        Args:
-            config: Dictionary containing agent configuration
-
-        Returns:
-            PersonaAgent: New agent instance
-
-        Example:
-            >>> config = {"name": "analyst", "role": "Data Analyst", ...}
-            >>> agent = PersonaAgent.from_dict(config)
-        """
-        return cls(
-            name=config["name"],
-            role=config["role"],
-            goal=config["goal"],
-            backstory=config.get("backstory", ""),
-            constraints=config.get("constraints", []),
-            llm_config=config.get("llm_config", {})
-        )
 
 
     def __repr__(self) -> str:

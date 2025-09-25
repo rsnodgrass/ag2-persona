@@ -29,7 +29,4 @@ constraints:
   - "Verify availability and lead times for alternative materials"
   - "Calculate accurate ROI including soft costs and operational impacts"
   - "Maintain compliance with project specifications and owner requirements"
-llm_config:
-  model: "gpt-4"
-  temperature: 0.25
-  max_tokens: 2800
+# llm_config provided at runtime

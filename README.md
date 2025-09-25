@@ -163,23 +163,32 @@ agent.update_goal("Review only the security aspects of the code")
 
 ### Creating Agents from Configuration
 
-#### `PersonaAgent.from_dict()`
+#### `PersonaBuilder` (Recommended)
 
-Create persona agents from configuration dictionaries:
+Create persona agents with validation and flexible configuration:
 
 ```python
-from ag2_persona import PersonaAgent
+from ag2_persona import PersonaBuilder
 
+# From dictionary
 config = {
     "name": "bioinformatics_specialist",
     "role": "Bioinformatics Specialist",
     "goal": "Analyze genomic sequences and identify patterns",
     "backstory": "PhD in computational biology with expertise in sequence analysis",
-    "constraints": ["Use validated algorithms", "Ensure reproducibility"],
-    "llm_config": {"model": "gpt-4", "temperature": 0.5}
+    "constraints": ["Use validated algorithms", "Ensure reproducibility"]
 }
 
-agent = PersonaAgent.from_dict(config)
+agent = (PersonaBuilder("bioinformatics_specialist")
+         .from_dict(config)
+         .with_llm_config({"model": "gpt-4", "temperature": 0.5})
+         .build())
+
+# Or from YAML file
+agent = (PersonaBuilder("bioinformatics_specialist")
+         .from_yaml("specialists/bioinformatics.yaml")
+         .with_llm_config({"model": "gpt-4", "temperature": 0.5})
+         .build())
 ```
 
 
@@ -475,7 +484,7 @@ A: Pass additional `system_message` in kwargs - it gets appended.
 A: Yes, all ConversableAgent features including function calling work normally.
 
 **Q: What is the best way to load PersonaAgents from config instead of hardcoded?**
-A: Use `PersonaAgent.from_dict()` with any config format you prefer. For YAML files, use `ruamel.yaml` since it supports comments. JSON works too, but YAML is more readable for agent configurations.
+A: Use `PersonaBuilder` with `.from_yaml()` or `.from_dict()`. This provides validation, flexible configuration, and separates persona definition from runtime LLM config. Example: `PersonaBuilder("agent").from_yaml("config.yaml").with_llm_config(llm_config).build()`
 
 **Q: How do I contribute improvements?**
 A: Submit PRs to enhance the structure while maintaining backward compatibility.

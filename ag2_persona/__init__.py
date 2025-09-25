@@ -6,6 +6,7 @@ enables agents to embody distinct personas through role, goal, and backstory com
 """
 
 from .persona_agent import PersonaAgent
+from .persona_builder import PersonaBuilder, HumanInputMode
 
 __version__ = "0.1.0"
-__all__ = ["PersonaAgent"]
+__all__ = ["PersonaAgent", "PersonaBuilder", "HumanInputMode"]

@@ -7,18 +7,71 @@ Shows how three specialized construction agents collaborate:
 3. Value Engineering Specialist - Cost optimization and ROI
 
 This demonstrates AG2's GroupChat pattern with PersonaAgents.
+
+Prerequisites:
+    # Install dependencies
+    
+
+    # Setup Ollama with Gemma3:4b (local, no API key needed)
+    ollama pull gemma2:2b
+    ollama serve
+
+    # Alternative: For OpenAI instead of Ollama:
+    # pip install "ag2[openai]" && export OPENAI_API_KEY=your_key
+
+    (Uses local ../ag2_persona development version)
+
+Run:
+    cd examples/
+    python construction_team.py
 """
 
-from ag2_persona import PersonaAgent
+import sys
+from pathlib import Path
+
+# Add the parent directory to path to import local ag2_persona
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from ag2_persona import PersonaAgent, HumanInputMode
+from ag2_persona.persona_builder import PersonaBuilder
 from autogen import GroupChat, GroupChatManager, UserProxyAgent
 
 def create_construction_team():
-    """Create a team of construction specialists"""
+    """Create a team of construction specialists using PersonaBuilder"""
 
-    # Load the three construction specialists
-    project_manager = PersonaAgent.from_yaml("library/construction_project_manager.yaml")
-    architect_specialist = PersonaAgent.from_yaml("library/architectural_specialist.yaml")
-    value_engineer = PersonaAgent.from_yaml("library/value_engineering_specialist.yaml")
+    # Define LLM config once for all agents (Ollama with Gemma2:2b)
+    llm_config = {
+        "config_list": [
+            {
+                "model": "gemma2:2b",
+                "base_url": "http://localhost:11434/v1",
+                "api_key": "ollama",  # placeholder for Ollama
+            }
+        ],
+        "temperature": 0.3
+    }
+
+    # Create construction specialists using PersonaBuilder with AG2 best practices
+    project_manager = (PersonaBuilder("project_manager")
+                       .from_yaml("library/construction_project_manager.yaml")
+                       .with_llm_config(llm_config)
+                       .with_human_input_mode(HumanInputMode.NEVER)
+                       .with_description("Manages project timelines, coordinates trades, resolves scheduling conflicts")
+                       .build())
+
+    architect_specialist = (PersonaBuilder("architect_specialist")
+                           .from_yaml("library/architectural_specialist.yaml")
+                           .with_llm_config(llm_config)
+                           .with_human_input_mode(HumanInputMode.NEVER)
+                           .with_description("Reviews architectural plans, identifies conflicts, ensures buildability")
+                           .build())
+
+    value_engineer = (PersonaBuilder("value_engineer")
+                     .from_yaml("library/value_engineering_specialist.yaml")
+                     .with_llm_config(llm_config)
+                     .with_human_input_mode(HumanInputMode.NEVER)
+                     .with_description("Optimizes costs, identifies value engineering opportunities, maximizes ROI")
+                     .build())
 
     # Create a user proxy to represent the client/owner
     client = UserProxyAgent(
@@ -27,17 +80,20 @@ def create_construction_team():
         max_consecutive_auto_reply=0
     )
 
-    # Create GroupChat for team collaboration
+    # Create GroupChat for team collaboration with AG2 best practices
     groupchat = GroupChat(
         agents=[client, project_manager, architect_specialist, value_engineer],
+        speaker_selection_method="auto",  # Uses agent descriptions for selection
         messages=[],
-        max_round=10
+        max_round=10,
+        send_introductions=True  # Optional: agents introduce themselves
     )
 
-    # Create the GroupChatManager to coordinate
+    # Create the GroupChatManager to coordinate - using same LLM config
     manager = GroupChatManager(
+        name="construction_manager",
         groupchat=groupchat,
-        llm_config={"model": "gpt-4", "temperature": 0.3}
+        llm_config=llm_config
     )
 
     return client, manager
@@ -85,18 +141,18 @@ def main():
     print("• Value Engineering: Optimize costs and ROI\n")
     print("-" * 60)
 
-    # In real usage with AG2 installed:
-    # analyze_project_scenario()
-
-    # For demonstration without AG2:
-    print("\nExample Analysis Output:")
-    print("\nPROJECT MANAGER: 'The 4-month facade delay is critical path...")
-    print("We need to explore fast-track alternatives or phase the facade...'")
-    print("\nARCHITECTURAL SPECIALIST: 'The MEP conflict requires immediate")
-    print("resolution. We can raise the structure 2ft or redesign ductwork...'")
-    print("\nVALUE ENGINEER: 'I recommend a flat panel system with accent curves")
-    print("saving $3M and 3 months. ROI analysis shows...'")
-    print("\n[Team continues collaborating to reach optimal solution]")
+    try:
+        # Run the actual AG2 conversation
+        analyze_project_scenario()
+    except Exception as e:
+        print(f"\nError running AG2 conversation: {e}")
+        print("\nThis likely means:")
+        print("1. AG2 not properly installed with LLM support")
+        print("2. No LLM configured or API key missing")
+        print("3. Missing ruamel.yaml: pip install ruamel.yaml")
+        print("\nInstallation options:")
+        print('  OpenAI: pip install "ag2[openai]" && export OPENAI_API_KEY=key')
+        print("  Ollama: pip install ag2 (local models, no API key needed)")
 
 if __name__ == "__main__":
     main()

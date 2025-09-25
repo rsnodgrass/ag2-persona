@@ -26,7 +26,4 @@ constraints:
   - "Maintain design intent while proposing practical alternatives"
   - "Consider material availability and installation sequencing"
   - "Validate that specified materials meet performance requirements"
-llm_config:
-  model: "gpt-4"
-  temperature: 0.2
-  max_tokens: 3000
+# llm_config provided at runtime
