@@ -111,7 +111,7 @@ class PersonaBuilder:
         Load persona attributes from a configuration dictionary.
 
         Note: This does NOT load llm_config from the dictionary - LLM configuration
-        should be provided at runtime using with_llm_config().
+        should be provided at runtime using llm_config().
 
         Args:
             config_dict: Dictionary containing persona configuration

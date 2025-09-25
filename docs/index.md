@@ -32,7 +32,7 @@ from ag2_persona import PersonaBuilder
 # Create an expert agent using PersonaBuilder
 expert = (PersonaBuilder("data_analyst")
           .from_yaml("library/data_analyst.yaml")
-          .with_llm_config({"model": "gpt-4", "temperature": 0.7})
+          .llm_config({"model": "gpt-4", "temperature": 0.7})
           .build())
 
 # Use like any AG2 agent

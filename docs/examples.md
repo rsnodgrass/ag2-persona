@@ -30,18 +30,31 @@ Pre-built expert personas are available in the [examples/library/](https://githu
 The power of PersonaBuilder shines when loading domain expert personas from the library:
 
 ```python
-from ag2_persona import PersonaBuilder
+from ag2_persona import PersonaBuilder, AsyncPersonaBuilder
 
-# Load any expert persona from the library
+# Sync version - blocks during file I/O
 architect = (PersonaBuilder("architect")
             .from_yaml("examples/library/senior_software_architect.yaml")
             .llm_config({"model": "gpt-4", "temperature": 0.7})
             .build())
 
+# Async version - non-blocking I/O for high-performance apps
+async def load_architect():
+    return await (AsyncPersonaBuilder("architect")
+                 .from_yaml("examples/library/senior_software_architect.yaml")
+                 .llm_config({"model": "gpt-4", "temperature": 0.7})
+                 .build())
+
 # Domain experts can edit the YAML files
 # Developers handle runtime LLM configuration
 # Perfect separation of concerns!
 ```
+
+**When to use async:**
+- High-concurrency applications
+- Web servers handling multiple requests
+- Applications with many personas to load
+- When file I/O blocking is a concern
 
 **Why this pattern works so well:**
 - **Domain experts** define the persona knowledge and behavior in YAML

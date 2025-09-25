@@ -2,7 +2,6 @@
 
 [![PyPi](https://img.shields.io/pypi/v/ag2-persona.svg)](https://pypi.python.org/pypi/ag2-person)
 [![MIT license](http://img.shields.io/badge/license-MIT-brightgreen.svg)](http://opensource.org/licenses/MIT)
-[![Build Status](https://github.com/rsnodgrass/ag2-persona/actions/workflows/ci.yml/badge.svg)](https://github.com/rsnodgrass/ag2-persona/actions/workflows/ci.yml)
 
 
 ## Why This Matters
@@ -86,19 +85,19 @@ response = expert.generate_reply(messages=[{"content": "Analyze this sales data"
 Build multi-agent teams by loading expert personas from YAML files. This enables domain experts to define agent behavior while developers handle runtime integration:
 
 ```python
-from ag2_persona import PersonaBuilder
+from ag2_persona import PersonaBuilder, AsyncPersonaBuilder
 from autogen import GroupChat, GroupChatManager
 
-# Load domain expert personas from YAML library
-lead_scientist = (PersonaBuilder("lead_scientist")
-                 .from_yaml("library/research_team_lead.yaml")
-                 .llm_config({"model": "gpt-4", "temperature": 0.7})
-                 .build())
+# Load domain expert personas from YAML library (async version)
+lead_scientist = await (AsyncPersonaBuilder("lead_scientist")
+                       .from_yaml("library/research_team_lead.yaml")
+                       .llm_config({"model": "gpt-4", "temperature": 0.7})
+                       .build())
 
-data_analyst = (PersonaBuilder("data_analyst")
-               .from_yaml("library/senior_data_engineer.yaml")
-               .llm_config({"model": "gpt-4", "temperature": 0.5})
-               .build())
+data_analyst = await (AsyncPersonaBuilder("data_analyst")
+                     .from_yaml("library/senior_data_engineer.yaml")
+                     .llm_config({"model": "gpt-4", "temperature": 0.5})
+                     .build())
 
 # Manual construction when YAML doesn't exist yet
 lab_technician = (PersonaBuilder("lab_tech")
@@ -122,6 +121,37 @@ manager = GroupChatManager(groupchat)
 - Personas are shared across projects and teams
 - Updates don't require code changes
 - Version control tracks persona evolution
+
+### Async Team Composition
+
+For async applications, use `AsyncPersonaBuilder` to avoid blocking the event loop:
+
+```python
+import asyncio
+from ag2_persona import AsyncPersonaBuilder
+from autogen import GroupChat, GroupChatManager
+
+async def create_async_team():
+    # Load personas asynchronously - no blocking I/O
+    lead_agent = await (AsyncPersonaBuilder("lead_scientist")
+                       .from_yaml("library/research_team_lead.yaml")
+                       .llm_config({"model": "gpt-4", "temperature": 0.7})
+                       .build())
+
+    analyst_agent = await (AsyncPersonaBuilder("data_analyst")
+                          .from_yaml("library/senior_data_engineer.yaml")
+                          .llm_config({"model": "gpt-4", "temperature": 0.5})
+                          .build())
+
+    return GroupChat(agents=[lead_agent, analyst_agent], messages=[], max_round=10)
+
+# Usage in async context
+async def main():
+    team = await create_async_team()
+    # Use team in async AG2 workflows...
+
+# Install async dependencies: pip install ag2-persona[yaml-async]
+```
 
 ## API Reference
 
@@ -201,6 +231,18 @@ agent = (PersonaBuilder("bioinformatics_specialist")
          .constraints(["Use validated algorithms", "Ensure reproducibility"])
          .llm_config({"model": "gpt-4", "temperature": 0.5})
          .build())
+
+# Async YAML loading (for async applications)
+async def create_async_agent():
+    return await (AsyncPersonaBuilder("bioinformatics_specialist")
+                 .from_yaml("library/bioinformatics_specialist.yaml")
+                 .llm_config({"model": "gpt-4", "temperature": 0.5})
+                 .build())
+```
+
+**Installation for async support:**
+```bash
+pip install ag2-persona[yaml-async]
 ```
 
 ## Migration Guide

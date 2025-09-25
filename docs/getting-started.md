@@ -21,16 +21,36 @@ PersonaAgent's power comes from **separating persona definition from runtime con
 The most powerful approach - load expert personas from configuration files:
 
 ```python
-from ag2_persona import PersonaBuilder
+from ag2_persona import PersonaBuilder, AsyncPersonaBuilder
 
-# Load domain expert persona from YAML library
+# Sync version (blocks during I/O)
 analyst = (PersonaBuilder("data_analyst")
           .from_yaml("library/senior_data_engineer.yaml")
           .llm_config({"model": "gpt-4", "temperature": 0.7})
           .build())
 
+# Async version (non-blocking I/O)
+async def create_analyst():
+    return await (AsyncPersonaBuilder("data_analyst")
+                 .from_yaml("library/senior_data_engineer.yaml")
+                 .llm_config({"model": "gpt-4", "temperature": 0.7})
+                 .build())
+
 # Use like any AG2 agent
 response = analyst.generate_reply(messages=[{"content": "Analyze this sales data"}])
+```
+
+### Installation Options
+
+```bash
+# Basic installation (sync YAML only)
+pip install ag2-persona[yaml]
+
+# Async support included
+pip install ag2-persona[yaml-async]
+
+# Development setup with async
+pip install ag2-persona[all]
 ```
 
 ## Direct Construction (For Simple Cases)

@@ -7,6 +7,7 @@ enables agents to embody distinct personas through role, goal, and backstory com
 
 from .persona_agent import PersonaAgent
 from .persona_builder import PersonaBuilder
+from .async_persona_builder import AsyncPersonaBuilder
 
 __version__ = "0.1.1"
-__all__ = ["PersonaAgent", "PersonaBuilder"]
+__all__ = ["PersonaAgent", "PersonaBuilder", "AsyncPersonaBuilder"]
