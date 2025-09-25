@@ -48,14 +48,14 @@ uv run ruff format --check .
 uv run mypy ag2_persona/
 ```
 
-### 3. Update Project Version and Changelog
+### 3. Update Project Version
 
 Update version in `pyproject.toml`:
 ```toml
 version = "0.1.2"  # Increment as needed
 ```
 
-Update `CHANGELOG.md` with new version details.
+Version changes will be tracked in GitHub releases instead of a separate changelog file.
 
 ### 4. Build the Package
 
