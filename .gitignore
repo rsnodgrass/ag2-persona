@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Agent Coding Tools
+.claude/
+
 # C extensions
 *.so
 
