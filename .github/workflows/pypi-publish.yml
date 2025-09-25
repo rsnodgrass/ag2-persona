@@ -8,12 +8,6 @@ name: Publish Python Package to PyPI
 # Manual trigger only (for now)
 on:
   workflow_dispatch:
-    inputs:
-      dry_run:
-        description: 'Perform a dry run (upload to TestPyPI instead)'
-        required: false
-        default: 'true'
-        type: boolean
 
 permissions:
   contents: read
@@ -28,26 +22,27 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
       with:
-        python-version: ${{ matrix.python-version }}
+        version: "latest"
+
+    - name: Set up Python ${{ matrix.python-version }}
+      run: uv python install ${{ matrix.python-version }}
 
     - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -e ".[dev]"
+      run: uv sync --dev
 
     - name: Lint with ruff
       run: |
-        ruff check .
-        ruff format --check .
+        uv run ruff check .
+        uv run ruff format --check .
 
     - name: Type check with mypy
-      run: mypy ag2_persona/
+      run: uv run mypy ag2_persona/
 
     - name: Test with pytest
-      run: pytest
+      run: uv run pytest
 
   build:
     needs: test
@@ -56,21 +51,22 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
       with:
-        python-version: "3.11"
+        version: "latest"
 
-    - name: Install build dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install build twine
+    - name: Set up Python
+      run: uv python install 3.11
+
+    - name: Install dependencies
+      run: uv sync
 
     - name: Build package
-      run: python -m build
+      run: uv build
 
     - name: Check package
-      run: twine check dist/*
+      run: uv run twine check dist/*
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
@@ -78,42 +74,15 @@ jobs:
         name: python-package-distributions
         path: dist/
 
-  publish-testpypi:
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.event.inputs.dry_run == 'true' || github.event_name == 'workflow_dispatch'
-
-    environment:
-      name: testpypi
-      url: https://test.pypi.org/p/ag2-persona
-
-    permissions:
-      id-token: write  # IMPORTANT: mandatory for trusted publishing
-
-    steps:
-    - name: Download build artifacts
-      uses: actions/download-artifact@v4
-      with:
-        name: python-package-distributions
-        path: dist/
-
-    - name: Publish to TestPyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        repository-url: https://test.pypi.org/legacy/
-
   publish-pypi:
     needs: build
     runs-on: ubuntu-latest
-    if: github.event.inputs.dry_run == 'false' && github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch'
     # if: github.event_name == 'release' && github.event.action == 'published'  # Enable this when ready
 
     environment:
       name: pypi
       url: https://pypi.org/p/ag2-persona
-
-    permissions:
-      id-token: write  # IMPORTANT: mandatory for trusted publishing
 
     steps:
     - name: Download build artifacts
@@ -124,3 +93,6 @@ jobs:
 
     - name: Publish to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        username: __token__
+        password: ${{ secrets.PYPI_TOKEN }}
