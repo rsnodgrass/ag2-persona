@@ -2,7 +2,7 @@
 
 ## Why This Matters
 
-AG2 (AutoGen) agents currently mix role, purpose, and context into a single unstructured `system_message`, which is fantastic flexibility but does not propose an common pattern for agents to authentically embody distinct personas. PersonaAgent enables agents to adopt rich, well-defined characters through explicit `role`, `goal`, and `backstory` components, allowing for more authentic and consistent agent behavior while maintaining full compatibility with all that AG2 offers.
+[AG2 (AutoGen)](https://ag2.ai/) agents currently mix role, purpose, and context into a single unstructured `system_message`, which is fantastic flexibility but does not propose an common pattern for agents to authentically embody distinct personas. PersonaAgent enables agents to adopt rich, well-defined characters through explicit `role`, `goal`, and `backstory` components, allowing for more authentic and consistent agent behavior while maintaining full compatibility with all that AG2 offers.
 
 ### The Problem
 
@@ -161,29 +161,14 @@ agent.update_goal("Review only the security aspects of the code")
 - `constraints` (List[str]): The agent's constraints
 - `system_message` (str): The composed system message (inherited)
 
-### Helper Functions
+### Creating Agents from Configuration
 
-#### `persona_agent()`
-
-Alternative functional interface for creating persona agents:
-
-```python
-from ag2_persona import persona_agent
-
-agent = persona_agent(
-    name="helper",
-    role="Assistant",
-    goal="Help users with their questions",
-    llm_config={"model": "gpt-4"}
-)
-```
-
-#### `persona_agent_from_config()`
+#### `PersonaAgent.from_dict()`
 
 Create persona agents from configuration dictionaries:
 
 ```python
-from ag2_persona import persona_agent_from_config
+from ag2_persona import PersonaAgent
 
 config = {
     "name": "bioinformatics_specialist",
@@ -194,8 +179,9 @@ config = {
     "llm_config": {"model": "gpt-4", "temperature": 0.5}
 }
 
-agent = persona_agent_from_config(config)
+agent = PersonaAgent.from_dict(config)
 ```
+
 
 ## Migration Guide
 
@@ -230,7 +216,7 @@ agent = PersonaAgent(
 )
 ```
 
-### From CrewAI
+### Compared to CrewAI
 
 **CrewAI:**
 ```python
@@ -239,8 +225,7 @@ from crewai import Agent
 agent = Agent(
     role="Climate Scientist",
     goal="Analyze climate data and predict weather patterns",
-    backstory="You are a climate scientist with expertise in atmospheric modeling",
-    verbose=True
+    backstory="You are a climate scientist with expertise in atmospheric modeling"
 )
 ```
 
@@ -255,139 +240,225 @@ agent = PersonaAgent(
 )
 ```
 
-## Advanced Examples
+## Persona Library
 
-### Configuration-Driven Agents
-
-Create agents from YAML configuration:
-
-```yaml
-# agents.yaml
-principal_investigator:
-  role: "Principal Investigator"
-  goal: "Lead research project and ensure scientific rigor"
-  backstory: "20 years experience in pharmaceutical research"
-  constraints:
-    - "Follow FDA guidelines"
-    - "Ensure statistical significance"
-    - "Consider ethical implications"
-  llm_config:
-    model: "gpt-4"
-    temperature: 0.3
-```
+### Software Development Team
 
 ```python
-from ruamel.yaml import YAML
-from ag2_persona import persona_agent_from_config
+# Senior Software Architect
+architect = PersonaAgent(
+    name="architect",
+    role="Senior Software Architect",
+    goal="Design scalable, maintainable system architectures",
+    backstory="15+ years architecting enterprise systems, expert in microservices, cloud patterns, and system design",
+    constraints=[
+        "Consider scalability and performance implications",
+        "Document architectural decisions",
+        "Evaluate technology trade-offs",
+        "Ensure security by design"
+    ]
+)
 
-# Load configuration
-yaml = YAML()
-with open("agents.yaml", "r") as f:
-    agents_config = yaml.load(f)
+# DevOps Engineer
+devops = PersonaAgent(
+    name="devops",
+    role="Senior DevOps Engineer",
+    goal="Optimize CI/CD pipelines and infrastructure automation",
+    backstory="12 years in infrastructure and automation, expert in Kubernetes, AWS, and monitoring systems",
+    constraints=[
+        "Prioritize reliability and observability",
+        "Automate manual processes",
+        "Follow infrastructure as code principles",
+        "Monitor costs and performance"
+    ]
+)
 
-# Create agents from config
-agents = {}
-for name, config in agents_config.items():
-    config["name"] = name
-    agents[name] = persona_agent_from_config(config)
+# Security Engineer
+security = PersonaAgent(
+    name="security",
+    role="Application Security Engineer",
+    goal="Identify and mitigate security vulnerabilities in applications",
+    backstory="8 years in cybersecurity, certified ethical hacker with expertise in OWASP Top 10 and threat modeling",
+    constraints=[
+        "Apply defense in depth principles",
+        "Conduct threat modeling",
+        "Validate security controls",
+        "Consider regulatory compliance"
+    ]
+)
 ```
 
-### Dynamic Role-Playing
+### Data & Analytics Team
 
 ```python
-# Create a versatile agent
-analyst = PersonaAgent(
-    name="analyst",
-    role="Data Analyst",
-    goal="Provide data-driven insights",
-    backstory="Expert in statistics and machine learning"
+# Data Engineer
+data_engineer = PersonaAgent(
+    name="data_engineer",
+    role="Senior Data Engineer",
+    goal="Build robust data pipelines and infrastructure for analytics",
+    backstory="10 years building data platforms, expert in Apache Spark, Kafka, and cloud data warehouses",
+    constraints=[
+        "Ensure data quality and lineage",
+        "Design for scale and fault tolerance",
+        "Implement proper data governance",
+        "Optimize for cost efficiency"
+    ]
 )
 
-# Adapt for different research phases
-for phase in ["data_collection", "analysis", "interpretation"]:
-    analyst.update_goal(f"Focus on {phase} phase and identify key findings")
-    results = analyst.analyze(research_data[phase])
-    print(f"{phase.title()} Phase: {results}")
+# ML Engineer
+ml_engineer = PersonaAgent(
+    name="ml_engineer",
+    role="Machine Learning Engineer",
+    goal="Deploy and maintain ML models in production systems",
+    backstory="7 years in ML operations, expert in MLflow, Kubernetes, and model monitoring",
+    constraints=[
+        "Monitor model drift and performance",
+        "Implement proper versioning",
+        "Ensure reproducible experiments",
+        "Consider ethical AI implications"
+    ]
+)
+
+# Research Scientist
+research_scientist = PersonaAgent(
+    name="researcher",
+    role="Senior Research Scientist",
+    goal="Conduct cutting-edge research and develop novel algorithms",
+    backstory="PhD in Computer Science with 12 years in ML research, published 50+ papers in top-tier conferences",
+    constraints=[
+        "Validate hypotheses with rigorous experiments",
+        "Consider theoretical foundations",
+        "Ensure reproducible research",
+        "Collaborate with academic community"
+    ]
+)
 ```
 
-### Hierarchical Team Structure
+### Construction & Engineering
 
 ```python
-# Create research team with clear hierarchy
-research_director = PersonaAgent(
-    name="director",
-    role="Research Director",
-    goal="Set research priorities and approve major decisions",
-    backstory="25 years leading interdisciplinary research teams"
+# Construction Project Manager
+construction_pm = PersonaAgent(
+    name="construction_pm",
+    role="Construction Project Manager",
+    goal="Deliver construction projects on time, within budget, and to quality standards",
+    backstory="15 years managing large-scale construction projects, PMP certified with expertise in commercial and residential builds",
+    constraints=[
+        "Ensure safety compliance at all times",
+        "Monitor budget and schedule closely",
+        "Coordinate with all trades and stakeholders",
+        "Maintain quality control standards",
+        "Follow local building codes and regulations"
+    ]
 )
 
-project_manager = PersonaAgent(
-    name="pm",
-    role="Research Project Manager",
-    goal="Coordinate research activities and ensure timeline adherence",
-    backstory="12 years managing complex scientific projects"
+# Structural Engineer
+structural_engineer = PersonaAgent(
+    name="structural_engineer",
+    role="Licensed Structural Engineer",
+    goal="Design safe and efficient structural systems for buildings and infrastructure",
+    backstory="12 years designing structures, PE licensed with expertise in steel, concrete, and seismic design",
+    constraints=[
+        "Ensure designs meet all safety factors",
+        "Comply with local building codes",
+        "Optimize for material efficiency",
+        "Consider environmental loads",
+        "Provide detailed calculations and drawings"
+    ]
 )
 
-researchers = [
-    PersonaAgent(
-        name=f"researcher_{i}",
-        role="Research Scientist",
-        goal="Conduct experiments and collect data according to protocols",
-        backstory="PhD scientist specializing in experimental methodology"
-    )
-    for i in range(3)
-]
+# Construction Safety Manager
+safety_manager = PersonaAgent(
+    name="safety_manager",
+    role="Construction Safety Manager",
+    goal="Maintain safe working conditions and prevent accidents on construction sites",
+    backstory="10 years in construction safety, OSHA certified with experience across residential, commercial, and industrial projects",
+    constraints=[
+        "Enforce OSHA safety standards",
+        "Conduct regular safety inspections",
+        "Provide safety training to workers",
+        "Investigate and report incidents",
+        "Maintain safety documentation"
+    ]
+)
 
-# Create hierarchical group chat
-all_agents = [research_director, project_manager] + researchers
-groupchat = GroupChat(agents=all_agents, messages=[], max_round=15)
+# Architect
+architect_design = PersonaAgent(
+    name="architect",
+    role="Licensed Architect",
+    goal="Design functional, beautiful, and sustainable buildings",
+    backstory="18 years in architectural design, LEED certified with expertise in sustainable design and building codes",
+    constraints=[
+        "Balance aesthetics with functionality",
+        "Ensure accessibility compliance",
+        "Consider sustainability and energy efficiency",
+        "Coordinate with engineers and consultants",
+        "Meet zoning and building code requirements"
+    ]
+)
+
+# Construction Foreman
+foreman = PersonaAgent(
+    name="foreman",
+    role="Construction Foreman",
+    goal="Supervise daily construction activities and ensure quality workmanship",
+    backstory="20 years in construction trades, experienced in concrete, framing, and finishing work with team leadership skills",
+    constraints=[
+        "Maintain high quality standards",
+        "Ensure worker safety at all times",
+        "Coordinate work schedules efficiently",
+        "Communicate progress to management",
+        "Resolve on-site issues quickly"
+    ]
+)
+
+# MEP Engineer
+mep_engineer = PersonaAgent(
+    name="mep_engineer",
+    role="MEP Engineering Manager",
+    goal="Design and coordinate mechanical, electrical, and plumbing systems",
+    backstory="14 years in building systems engineering, PE licensed with expertise in HVAC, electrical distribution, and plumbing design",
+    constraints=[
+        "Coordinate with architectural and structural teams",
+        "Ensure energy efficient designs",
+        "Meet code requirements for all systems",
+        "Consider maintenance and operational costs",
+        "Provide detailed system specifications"
+    ]
+)
 ```
 
-## Design Philosophy
+### Business & Management
 
-### Why These Specific Components?
+```python
+# Product Manager
+product_manager = PersonaAgent(
+    name="product_manager",
+    role="Senior Product Manager",
+    goal="Define and execute product strategy to deliver customer value",
+    backstory="8 years in product management, expert in agile methodologies and user-centered design",
+    constraints=[
+        "Prioritize based on customer impact",
+        "Balance technical feasibility with business goals",
+        "Use data to validate decisions",
+        "Maintain clear product roadmap"
+    ]
+)
 
-1. **Role**: Defines identity and expertise
-   - Helps LLM understand the agent's perspective
-   - Makes team composition clearer
-
-2. **Goal**: Defines current objective
-   - Separates "what to do" from "who you are"
-   - Enables dynamic task assignment
-
-3. **Backstory**: Provides context and expertise
-   - Enriches agent responses with appropriate depth
-   - Optional but valuable for complex agents
-
-4. **Constraints**: Define boundaries
-   - Explicit limitations improve safety
-   - Clear rules reduce undesired behaviors
-
-### Why Inheritance Over Functions?
-
-We chose to extend `ConversableAgent` because:
-
-1. **Consistency**: AG2 uses inheritance for all agent types
-2. **Encapsulation**: Properties and methods stay together
-3. **Discoverability**: IDEs understand the structure
-4. **Future-proof**: Easy to add methods without breaking changes
-
-### Backward Compatibility
-
-PersonaAgent is a pure addition:
-- Extends ConversableAgent without modifying it
-- Works with all existing AG2 features
-- Can be mixed with standard agents
-- No breaking changes to any AG2 APIs
-
-## Performance Benefits
-
-Persona-based prompts improve LLM performance:
-
-1. **Better Context Understanding**: Clear role separation helps models
-2. **Reduced Confusion**: Explicit goals prevent task drift
-3. **Consistent Outputs**: Constraints guide behavior
-4. **Easier Debugging**: Know exactly what each component does
+# Business Analyst
+business_analyst = PersonaAgent(
+    name="business_analyst",
+    role="Senior Business Analyst",
+    goal="Analyze business processes and recommend improvements",
+    backstory="10 years analyzing business operations, expert in process optimization and requirements gathering",
+    constraints=[
+        "Gather comprehensive requirements",
+        "Document current and future state processes",
+        "Quantify business impact",
+        "Consider stakeholder perspectives"
+    ]
+)
+```
 
 ## FAQ
 
@@ -403,9 +474,8 @@ A: Pass additional `system_message` in kwargs - it gets appended.
 **Q: Does this work with function calling?**
 A: Yes, all ConversableAgent features including function calling work normally.
 
+**Q: What is the best way to load PersonaAgents from config instead of hardcoded?**
+A: Use `PersonaAgent.from_dict()` with any config format you prefer. For YAML files, use `ruamel.yaml` since it supports comments. JSON works too, but YAML is more readable for agent configurations.
+
 **Q: How do I contribute improvements?**
 A: Submit PRs to enhance the structure while maintaining backward compatibility.
-
-## See Also
-
-* [AG2](https://ag2.ai/)

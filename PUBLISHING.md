@@ -118,10 +118,3 @@ ruff format --check .
 # Run type checking
 mypy ag2_persona/
 ```
-
-## Security Notes
-
-- Never commit API tokens to git
-- Use PyPI's trusted publishing for GitHub Actions when possible
-- Always test on TestPyPI before production uploads
-- Consider using `keyring` to store credentials securely

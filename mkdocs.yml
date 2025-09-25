@@ -1,8 +1,8 @@
 site_name: AG2 PersonaAgent
-site_url: https://ryansnodgrass.github.io/ag2-persona
+site_url: https://rsnodgrass.github.io/ag2-persona
 site_description: Persona-based agents for AG2 (AutoGen) - enabling distinct character embodiment
-repo_url: https://github.com/ryansnodgrass/ag2-persona
-repo_name: ryansnodgrass/ag2-persona
+repo_url: https://github.com/rsnodgrass/ag2-persona
+repo_name: rsnodgrass/ag2-persona
 
 theme:
   name: material

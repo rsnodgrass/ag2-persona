@@ -7,7 +7,7 @@ name = "ag2-persona"
 version = "0.1.0"
 description = "Persona-based agents for AG2 (AutoGen) - enabling distinct character embodiment"
 readme = "README.md"
-license = {text = "MIT"}
+license = "MIT"
 authors = [
     {name = "Ryan Snodgrass", email = "ryan@snodgrass.dev"}
 ]

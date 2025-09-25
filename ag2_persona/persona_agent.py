@@ -187,102 +187,16 @@ class PersonaAgent(ConversableAgent):
             >>> config = {"name": "analyst", "role": "Data Analyst", ...}
             >>> agent = PersonaAgent.from_dict(config)
         """
-        # Extract structured components
-        name = config.pop("name")
-        role = config.pop("role")
-        goal = config.pop("goal")
-        backstory = config.pop("backstory", "")
-        constraints = config.pop("constraints", None)
-
-        # Remove system_message as we'll regenerate it
-        config.pop("system_message", None)
-
-        # Create agent with remaining config as kwargs
         return cls(
-            name=name, role=role, goal=goal, backstory=backstory, constraints=constraints, **config
+            name=config["name"],
+            role=config["role"],
+            goal=config["goal"],
+            backstory=config.get("backstory", ""),
+            constraints=config.get("constraints", []),
+            llm_config=config.get("llm_config", {})
         )
+
 
     def __repr__(self) -> str:
         """String representation of the agent."""
         return f"PersonaAgent(name='{self.name}', role='{self.role}', goal='{self.goal[:50]}...')"
-
-
-# Functional interface for those who prefer functions over classes
-def persona_agent(
-    name: str,
-    role: str,
-    goal: str,
-    backstory: str = "",
-    constraints: list[str] | None = None,
-    **kwargs: Any,
-) -> PersonaAgent:
-    """
-    Create a PersonaAgent using a functional interface.
-
-    This is a convenience function for those who prefer functional style.
-
-    Args:
-        name: Agent identifier
-        role: The agent's role
-        goal: What the agent should accomplish
-        backstory: Optional background context
-        constraints: Optional list of limitations
-        **kwargs: Additional ConversableAgent parameters
-
-    Returns:
-        PersonaAgent: Configured agent instance
-
-    Example:
-        >>> agent = persona_agent(
-        ...     name="helper",
-        ...     role="Assistant",
-        ...     goal="Help users with questions"
-        ... )
-    """
-    return PersonaAgent(
-        name=name, role=role, goal=goal, backstory=backstory, constraints=constraints, **kwargs
-    )
-
-
-def persona_agent_from_config(config: dict[str, Any] | str) -> PersonaAgent:
-    """
-    Create a PersonaAgent from configuration.
-
-    Args:
-        config: Dictionary config or path to YAML/JSON file
-
-    Returns:
-        PersonaAgent: Configured agent instance
-
-    Example:
-        >>> # From dict
-        >>> agent = persona_agent_from_config({
-        ...     "name": "analyst",
-        ...     "role": "Data Analyst",
-        ...     "goal": "Analyze data"
-        ... })
-
-        >>> # From file
-        >>> agent = persona_agent_from_config("agent_config.yaml")
-    """
-    if isinstance(config, str):
-        # Load from file
-        import json
-
-        with open(config) as f:
-            if config.endswith(".json"):
-                config = json.load(f)
-            elif config.endswith((".yaml", ".yml")):
-                try:
-                    from ruamel.yaml import YAML
-
-                    yaml = YAML()
-                    config = yaml.load(f)
-                except ImportError as err:
-                    raise ImportError(
-                        "ruamel.yaml is required for YAML config files. Install with: pip install ruamel.yaml"
-                    ) from err
-            else:
-                raise ValueError(f"Unsupported file format: {config}")
-
-    return PersonaAgent.from_dict(config)
