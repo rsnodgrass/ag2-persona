@@ -105,8 +105,24 @@ disallow_untyped_defs = false
 disallow_incomplete_defs = false
 
 [[tool.mypy.overrides]]
+module = "autogen"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "frontmatter"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "aiofiles.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
 module = "ag2_persona.persona_agent"
 disable_error_code = ["misc"]  # ConversableAgent has type Any - external library
+
+[[tool.mypy.overrides]]
+module = "ag2_persona.parsers"
+ignore_missing_imports = false
 
 [[tool.mypy.overrides]]
 module = "ag2_persona.persona_builder"

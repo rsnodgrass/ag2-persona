@@ -346,8 +346,8 @@ class AsyncPersonaBuilder:
             from .parsers import PersonaMarkdownParser
 
             try:
-                import aiofiles  # type: ignore[import-untyped]
-                import aiofiles.os  # type: ignore[import-untyped]
+                import aiofiles
+                import aiofiles.os
             except ImportError as err:
                 raise ImportError(
                     "aiofiles is required for async markdown loading. Install with: pip install aiofiles"
