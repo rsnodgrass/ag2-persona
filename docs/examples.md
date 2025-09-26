@@ -13,6 +13,7 @@ The Markdown format follows a clear separation of concerns:
 This ensures both human-friendly storytelling and machine-friendly structured data.
 
 **Key Benefits:**
+
 - **🔄 Reusability**: Share persona definitions across projects and teams
 - **🛠️ Maintainability**: Update agent behavior without touching code
 - **👥 Non-developer friendly**: Subject matter experts can edit Markdown files directly

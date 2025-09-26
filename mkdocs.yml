@@ -6,21 +6,25 @@ repo_name: rsnodgrass/ag2-persona
 
 theme:
   name: material
+  logo: https://raw.githubusercontent.com/ag2ai/ag2/main/website/static/img/logo.svg
   favicon: https://www.google.com/s2/favicons?domain=ag2.ai
+  font:
+    text: Inter
+    code: Roboto Mono
   palette:
     # Palette toggle for light mode
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: blue
-      accent: blue
+      primary: deep purple
+      accent: deep purple
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
     # Palette toggle for dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: blue
-      accent: blue
+      primary: deep purple
+      accent: deep purple
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
@@ -30,10 +34,16 @@ theme:
     - navigation.expand
     - navigation.path
     - navigation.top
+    - navigation.instant
+    - navigation.tracking
     - search.highlight
     - search.share
+    - search.suggest
     - content.code.copy
     - content.code.annotate
+    - content.tabs.link
+    - toc.follow
+    - toc.integrate
 
 nav:
   - Home: index.md
@@ -73,3 +83,12 @@ markdown_extensions:
       alternate_style: true
   - attr_list
   - md_in_html
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.tilde
+  - def_list
+  - footnotes
+  - tables
+  - toc:
+      permalink: true
