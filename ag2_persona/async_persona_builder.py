@@ -43,22 +43,22 @@ class AsyncPersonaBuilder:
         ...                .llm_config({"model": "gpt-4", "temperature": 0.7})
         ...                .build())
 
-        Loading from YAML with async I/O:
+        Loading from Markdown with async I/O:
         >>> agent = await (AsyncPersonaBuilder("expert")
-        ...                .from_yaml("personas/data_scientist.yaml")
+        ...                .from_markdown("personas/data_scientist.md")
         ...                .llm_config({"model": "gpt-4"})
         ...                .human_input_never()
         ...                .build())
 
         Complex multi-step configuration:
         >>> agent = await (AsyncPersonaBuilder("researcher")
-        ...                .from_yaml("personas/researcher.yaml")
+        ...                .from_markdown("personas/researcher.md")
         ...                .extend_goal("focus on statistical significance")
         ...                .add_constraint("Use peer-reviewed sources")
         ...                .add_constraint("Provide confidence intervals")
         ...                .temperature(0.5)
         ...                .description("Statistical research specialist")
-        ...                .kwargs(max_consecutive_auto_reply=10)
+        ...                .add_kwargs(max_consecutive_auto_reply=10)
         ...                .build())
 
         Debug mode for development:
@@ -198,6 +198,25 @@ class AsyncPersonaBuilder:
         self._record_sync(set_description)
         return self
 
+    def human_input_mode(self, mode: str) -> Self:
+        """Set agent's human input mode.
+
+        Args:
+            mode: One of "NEVER", "ALWAYS", or "TERMINATE"
+
+        Raises:
+            ValueError: If mode is not valid
+        """
+
+        def set_human_input_mode() -> None:
+            valid_modes = ["NEVER", "ALWAYS", "TERMINATE"]
+            if mode not in valid_modes:
+                raise ValueError(f"Invalid human_input_mode: {mode}. Must be one of {valid_modes}")
+            self.additional_kwargs["human_input_mode"] = mode
+
+        self._record_sync(set_human_input_mode)
+        return self
+
     def human_input_never(self) -> Self:
         """Set agent to never prompt for human input."""
 
@@ -225,7 +244,7 @@ class AsyncPersonaBuilder:
         self._record_sync(set_human_input_terminate)
         return self
 
-    def kwargs(self, **kwargs: Any) -> Self:
+    def add_kwargs(self, **kwargs: Any) -> Self:
         """Add additional ConversableAgent parameters."""
 
         def set_kwargs() -> None:
@@ -276,91 +295,91 @@ class AsyncPersonaBuilder:
         self._record_sync(load_from_dict)
         return self
 
-    def from_yaml(self, file_path: str | Path) -> Self:
+    def from_markdown(self, file_path: str | Path) -> Self:
         """
-        Load persona definition from a YAML file asynchronously.
+        Load persona definition from a Markdown file asynchronously.
 
         This method uses deferred execution - the file I/O will happen during build()
         to avoid blocking the event loop during method chaining.
 
         Args:
-            file_path: Path to YAML configuration file
+            file_path: Path to Markdown configuration file
 
         Returns:
             Self for method chaining
 
         Raises:
-            FileNotFoundError: If the YAML file doesn't exist (raised during build())
-            ValueError: If the YAML file is invalid or contains bad data (raised during build())
-            ImportError: If ruamel.yaml or aiofiles is not installed (raised during build())
+            FileNotFoundError: If the Markdown file doesn't exist (raised during build())
+            ValueError: If the Markdown format is invalid (raised during build())
+            ImportError: If required dependencies (python-frontmatter, ruamel.yaml, aiofiles) are not installed (raised during build())
 
         Example:
             >>> # File I/O happens asynchronously during build(), not here
             >>> agent = await (AsyncPersonaBuilder("analyst")
-            ...                .from_yaml("configs/data_analyst.yaml")  # Queued for async execution
-            ...                .llm_config({"model": "gpt-4"})         # Sync operation
-            ...                .build())                               # Async file load happens here
+            ...                .from_markdown("configs/data_analyst.md")  # Queued for async execution
+            ...                .llm_config({"model": "gpt-4"})            # Sync operation
+            ...                .build())                                  # Async file load happens here
 
-        YAML File Format:
-            role: "Data Analyst"
-            goal: "Analyze datasets and provide insights"
-            backstory: "Expert in statistical analysis with 10 years experience"
-            constraints:
-              - "Use statistical significance tests"
-              - "Provide data visualizations"
+        Markdown File Format:
+            ---
+            name: data_analyst
+            llm_config:
+              model: gpt-4
+              temperature: 0.7
+            ---
+
+            # Role
+            Data Analyst
+
+            # Goal
+            Analyze datasets and provide insights
+
+            # Backstory
+            Expert in statistical analysis with 10 years experience
+
+            # Constraints
+            - Use statistical significance tests
+            - Provide data visualizations
         """
 
-        async def load_from_yaml() -> None:
-            try:
-                from ruamel.yaml import YAML
-            except ImportError as err:
-                raise ImportError(
-                    "ruamel.yaml is required for YAML config files. Install with: pip install ruamel.yaml"
-                ) from err
+        async def load_from_markdown() -> None:
+            from .parsers import PersonaMarkdownParser
 
             try:
                 import aiofiles  # type: ignore[import-untyped]
                 import aiofiles.os  # type: ignore[import-untyped]
             except ImportError as err:
                 raise ImportError(
-                    "aiofiles is required for async YAML loading. Install with: pip install aiofiles"
+                    "aiofiles is required for async markdown loading. Install with: pip install aiofiles"
                 ) from err
 
             file_path_obj = Path(file_path)
 
             # Async file existence check
             if not await aiofiles.os.path.exists(file_path_obj):
-                raise FileNotFoundError(f"Persona YAML file not found: {file_path_obj}")
+                raise FileNotFoundError(f"Persona Markdown file not found: {file_path_obj}")
 
-            yaml = YAML()
-            try:
-                async with aiofiles.open(file_path_obj) as f:
-                    content = await f.read()
-                    config = yaml.load(content)
-            except Exception as e:
-                raise ValueError(f"Error loading YAML from {file_path_obj}: {e}") from e
+            # Async file I/O
+            async with aiofiles.open(file_path_obj) as f:
+                content = await f.read()
 
-            if config is None:
-                raise ValueError(f"YAML file {file_path_obj} is empty or contains no valid data")
+            # Parse content using simplified parser
+            config = PersonaMarkdownParser.parse_persona_markdown(content)
 
-            # Apply the loaded config using from_dict logic
-            if not isinstance(config, dict):
-                raise ValueError(f"Configuration must be a dictionary for persona '{self.name}'")
+            # Handle name resolution (business logic)
+            config["name"] = self.name or config.get("name") or file_path_obj.stem
 
-            # Load persona attributes (but not llm_config)
-            self._role = config.get("role")
-            self._goal = config.get("goal")
-            self._backstory = config.get("backstory", "")
+            # Apply the configuration
+            self.name = config["name"]
+            self._role = config["role"]
+            self._goal = config["goal"]
+            self._backstory = config["backstory"]
+            self._constraints = config["constraints"]
+            self._llm_config = config["llm_config"]
+            self._description = config["description"]
+            self.additional_kwargs.update(config["additional_kwargs"])
 
-            # Load constraints with type validation
-            constraints_raw = config.get("constraints", [])
-            if constraints_raw and not isinstance(constraints_raw, list):
-                raise ValueError(
-                    f"Constraints must be a list for persona '{self.name}', got {type(constraints_raw)}"
-                )
-            self._constraints = constraints_raw
-
-        self._record_async(load_from_yaml)
+        self._record_async(load_from_markdown)
         return self
 
     # ---- Finalizer ----
@@ -377,11 +396,16 @@ class AsyncPersonaBuilder:
             errors.append(f"Goal is required for persona '{self.name}'")
 
         # Validate LLM config structure if provided (skip if False - means no LLM)
-        if isinstance(self._llm_config, dict):
-            required_keys = ["config_list", "model"]
-            if not any(key in self._llm_config for key in required_keys):
+        if self._llm_config is not None and self._llm_config is not False:
+            if isinstance(self._llm_config, dict):
+                required_keys = ["config_list", "model"]
+                if not any(key in self._llm_config for key in required_keys):
+                    errors.append(
+                        f"LLM config must contain one of {required_keys} for persona '{self.name}'"
+                    )
+            else:
                 errors.append(
-                    f"LLM config must contain one of {required_keys} for persona '{self.name}'"
+                    f"LLM config must be a dictionary for persona '{self.name}', got {type(self._llm_config)}"
                 )
 
         if errors:

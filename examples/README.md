@@ -1,6 +1,6 @@
 # Persona Library Examples
 
-The 'examples/library/' directory contains example PersonaAgent definitions in YAML format. Each file represents a complete agent persona with role, goal, backstory, constraints, and LLM configuration.
+The 'examples/library/' directory contains example PersonaAgent definitions in Markdown format. Each file represents a complete agent persona with role, goal, backstory, constraints, and LLM configuration.
 
 ## Construction Team Specialists (Multi-Agent Example)
 
@@ -34,9 +34,9 @@ These three agents work together to solve complex construction challenges:
 ```python
 from ag2_persona import PersonaBuilder
 
-# Load a persona from YAML using PersonaBuilder
-agent = (PersonaBuilder("value_engineer")
-         .from_yaml("library/value_engineering_specialist.yaml")
+# Load a persona from Markdown using PersonaBuilder
+agent = (PersonaBuilder.from_markdown("library/value_engineering_specialist.md")
+         .set_name("value_engineer")
          .llm_config({"model": "gpt-4", "temperature": 0.7})
          .build())
 ```
@@ -52,18 +52,18 @@ from autogen import GroupChat, GroupChatManager
 llm_config = {"model": "gpt-4", "temperature": 0.7}
 
 # Load the construction team using PersonaBuilder
-pm = (PersonaBuilder("project_manager")
-      .from_yaml("library/construction_project_manager.yaml")
+pm = (PersonaBuilder.from_markdown("library/construction_project_manager.md")
+      .set_name("project_manager")
       .llm_config(llm_config)
       .build())
 
-arch = (PersonaBuilder("architect_specialist")
-        .from_yaml("library/architectural_specialist.yaml")
+arch = (PersonaBuilder.from_markdown("library/architectural_specialist.md")
+        .set_name("architect_specialist")
         .llm_config(llm_config)
         .build())
 
-ve = (PersonaBuilder("value_engineer")
-      .from_yaml("library/value_engineering_specialist.yaml")
+ve = (PersonaBuilder.from_markdown("library/value_engineering_specialist.md")
+      .set_name("value_engineer")
       .llm_config(llm_config)
       .build())
 
@@ -75,21 +75,38 @@ manager = GroupChatManager(groupchat=group)
 manager.initiate_chat(message="How do we handle this facade delay?")
 ```
 
-## Library YAML File Schema
+## Design Philosophy: Spec vs Character
 
-Each YAML file that describes the behavior of an agent can contain the following fields. The YAML file does not need to be complete if using PersonaBuilder and overriding any of the fields.
+The Markdown persona format follows a clear separation of concerns:
 
-- `name`: Unique identifier (should match filename without .yaml)
-- `role`: The agent's professional title/role
-- `goal`: What the agent should accomplish (can be overridden)
-- `backstory`: Rich background, experience, and expertise
-- `constraints`: List of rules, guidelines, and limitations
+1. **Frontmatter = Structure** (what the system needs)
+2. **Markdown = Narrative** (what makes the character real)
+
+This separation makes the format both **human-friendly** (domain experts write stories) and **machine-friendly** (systems get structured data). It's the right balance between flexibility and consistency.
+
+### The SPEC (YAML Frontmatter)
+The frontmatter defines the **contract** - structured, concise statements of what the agent IS and MUST do:
+
+- `name`: Unique identifier (should match filename without .md)
+- `role`: The agent's professional title/role (one-line identity)
+- `goal`: What the agent should accomplish (clear objective, can be overridden)
+- `constraints`: List of rules, guidelines, and limitations (enforced as YAML list)
 - `llm_config`: Model configuration (model, temperature, max_tokens)
 
-## YAML File Benefits
+### The CHARACTER (Markdown Content)
+The markdown body provides the **narrative** - rich, flexible storytelling that brings the agent to life:
+
+- `# Backstory`: Rich background, experience, expertise, and personality
+
+This structure ensures that:
+- **Role/Goal** stay concise (not buried in prose)
+- **Constraints** remain structured (guaranteed bullet points)
+- **Backstory** can be richly formatted (paragraphs, emphasis, personality)
+
+## Markdown File Benefits
 
 - **Modularity**: One agent per file for easy version control
 - **Reusability**: Load same agent with different goals
-- **Rich Personas**: Detailed backstories for authentic behavior
-- **Easy Maintenance**: Simple YAML format for non-technical editing
+- **Rich Personas**: Detailed backstories in readable Markdown format
+- **Easy Maintenance**: Simple Markdown format for non-technical editing
 - **Flexibility**: Override any parameter when creating agents

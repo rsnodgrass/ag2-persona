@@ -19,6 +19,14 @@ except ImportError:
             self.system_message = system_message
             self.llm_config = kwargs.get("llm_config", {})
 
+            # Store all kwargs as attributes for test compatibility
+            for key, value in kwargs.items():
+                setattr(self, key, value)
+
+        def update_system_message(self, new_message: str) -> None:
+            """Update the system message (mock implementation)."""
+            self.system_message = new_message
+
     AG2_AVAILABLE = False
 
 
@@ -38,6 +46,7 @@ class PersonaAgent(ConversableAgent):
         goal (str): What the agent should accomplish
         backstory (str): Background context and expertise
         constraints (List[str]): Rules and limitations
+        description (str): Short description for GroupChat agent selection
 
     Example:
         >>> agent = PersonaAgent(
@@ -77,18 +86,24 @@ class PersonaAgent(ConversableAgent):
         self.backstory = backstory
         self.constraints = constraints if constraints is not None else []
 
-        # Build the structured system message
-        system_message = self._build_system_message()
-
         # Generate description for GroupChat if not provided
         if description is None:
             description = f"{self.role}: {self.goal}"
+
+        # Store description as instance property so tests can access it
+        self.description = description
+
+        # Build the structured system message
+        system_message = self._build_system_message()
 
         # Handle any additional system_message in kwargs
         # This maintains backward compatibility
         if "system_message" in kwargs:
             additional = kwargs.pop("system_message")
             system_message = f"{system_message}\n\nAdditional Instructions:\n{additional}"
+
+        # Store human_input_mode for property access
+        self._human_input_mode = kwargs.get("human_input_mode", "TERMINATE")
 
         # Initialize parent ConversableAgent (inherits AG2's defaults)
         super().__init__(
@@ -118,6 +133,16 @@ class PersonaAgent(ConversableAgent):
             parts.extend(f"- {constraint}" for constraint in self.constraints)
 
         return "\n".join(parts)
+
+    @property
+    def human_input_mode(self) -> str:
+        """Get the human input mode."""
+        return getattr(self, "_human_input_mode", "TERMINATE")
+
+    @human_input_mode.setter
+    def human_input_mode(self, value: str) -> None:
+        """Set the human input mode."""
+        self._human_input_mode = value
 
     def update_goal(self, new_goal: str) -> None:
         """
@@ -164,11 +189,11 @@ class PersonaAgent(ConversableAgent):
         """
         Export the agent's persona configuration as a dictionary.
 
-        Note: This excludes llm_config as it should be provided at runtime.
+        Includes all configuration needed to recreate the agent.
         Use PersonaBuilder.from_dict(agent.to_dict()) to recreate the agent.
 
         Returns:
-            dict: Persona configuration (role, goal, backstory, constraints)
+            dict: Persona configuration including llm_config
         """
         return {
             "name": self.name,
@@ -176,6 +201,7 @@ class PersonaAgent(ConversableAgent):
             "goal": self.goal,
             "backstory": self.backstory,
             "constraints": self.constraints,
+            "llm_config": getattr(self, "llm_config", None),
         }
 
     def __repr__(self) -> str:

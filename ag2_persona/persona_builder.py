@@ -17,31 +17,45 @@ class PersonaBuilder:
     Builder pattern for creating PersonaAgent instances with validation and flexibility.
 
     Provides a fluent interface for constructing PersonaAgents with comprehensive
-    validation, flexible loading from YAML/dict sources, and runtime LLM configuration.
+    validation, flexible loading from Markdown sources, and runtime LLM configuration.
 
     Example:
+        >>> # Recommended: Load from Markdown files
+        >>> agent = PersonaBuilder.from_markdown("analyst.md").build()
+
+        >>> # With name override and chaining
+        >>> agent = (PersonaBuilder.from_markdown("base.md")
+        ...           .set_name("custom_analyst")
+        ...           .extend_goal("Focus on real-time data")
+        ...           .build())
+
+        >>> # Manual construction (for programmatic use)
         >>> agent = (PersonaBuilder("analyst")
-        ...           .from_yaml("analyst.yaml")
-        ...           .llm_config({"model": "gpt-4"})
-        ...           .add_constraint("Focus on statistical significance")
+        ...           .role("Data Analyst")
+        ...           .goal("Analyze data")
         ...           .build())
     """
 
-    def __init__(self, name: str):
+    def __init__(self, name: str | None = None):
         """
-        Initialize PersonaBuilder with agent name.
+        Initialize PersonaBuilder with optional agent name.
 
         Args:
-            name: Unique identifier for the agent
+            name: Optional unique identifier for the agent. If None, must be set via from_* methods or set_name() method.
         """
         self.name = name
         self._role: str | None = None
         self._goal: str | None = None
         self._backstory: str = ""
         self._constraints: list[str] = []
-        self._llm_config: dict[str, Any] | None = None
+        self._llm_config: dict[str, Any] | bool | None = None
         self._description: str | None = None
         self.additional_kwargs: dict[str, Any] = {}
+
+    def set_name(self, name: str) -> "PersonaBuilder":
+        """Set the agent name."""
+        self.name = name
+        return self
 
     def role(self, role: str) -> "PersonaBuilder":
         """Set the persona's role or title."""
@@ -78,30 +92,43 @@ class PersonaBuilder:
         """Convenience method to set just the temperature in LLM config."""
         if not self._llm_config:
             self._llm_config = {}
-        self._llm_config["temperature"] = temp
+        if isinstance(self._llm_config, dict):
+            self._llm_config["temperature"] = temp
         return self
 
-    def with_human_input_never(self) -> "PersonaBuilder":
+    def human_input_mode(self, mode: str) -> "PersonaBuilder":
+        """Set agent's human input mode.
+
+        Args:
+            mode: One of "NEVER", "ALWAYS", or "TERMINATE"
+
+        Raises:
+            ValueError: If mode is not valid
+        """
+        valid_modes = ["NEVER", "ALWAYS", "TERMINATE"]
+        if mode not in valid_modes:
+            raise ValueError(f"Invalid human_input_mode: {mode}. Must be one of {valid_modes}")
+        self.additional_kwargs["human_input_mode"] = mode
+        return self
+
+    def human_input_never(self) -> "PersonaBuilder":
         """Set agent to never prompt for human input."""
-        self.additional_kwargs["human_input_mode"] = "NEVER"
-        return self
+        return self.human_input_mode("NEVER")
 
-    def with_human_input_always(self) -> "PersonaBuilder":
+    def human_input_always(self) -> "PersonaBuilder":
         """Set agent to always prompt for human input."""
-        self.additional_kwargs["human_input_mode"] = "ALWAYS"
-        return self
+        return self.human_input_mode("ALWAYS")
 
-    def with_human_input_terminate(self) -> "PersonaBuilder":
+    def human_input_terminate(self) -> "PersonaBuilder":
         """Set agent to prompt for human input only on termination (AG2 default)."""
-        self.additional_kwargs["human_input_mode"] = "TERMINATE"
-        return self
+        return self.human_input_mode("TERMINATE")
 
     def description(self, description: str) -> "PersonaBuilder":
         """Set description for GroupChat agent selection."""
         self._description = description
         return self
 
-    def with_kwargs(self, **kwargs: Any) -> "PersonaBuilder":
+    def add_kwargs(self, **kwargs: Any) -> "PersonaBuilder":
         """Add additional ConversableAgent parameters."""
         self.additional_kwargs.update(kwargs)
         return self
@@ -125,11 +152,19 @@ class PersonaBuilder:
         if not isinstance(config_dict, dict):
             raise ValueError(f"Configuration must be a dictionary for persona '{self.name}'")
 
-        # Load persona attributes (but not llm_config)
+        # Load persona attributes (but not llm_config for instance method backward compatibility)
         self._role = config_dict.get("role")
         self._goal = config_dict.get("goal")
         self._backstory = config_dict.get("backstory", "")
         self._constraints = config_dict.get("constraints", [])
+
+        # Load name only if not already set (preserves instance name)
+        if not self.name and "name" in config_dict:
+            self.name = config_dict["name"]
+
+        # Load LLM config from 'llm_config' key (matches AG2 API)
+        if "llm_config" in config_dict:
+            self._llm_config = config_dict["llm_config"]
 
         # Validate constraints format
         if self._constraints and not isinstance(self._constraints, list):
@@ -139,44 +174,109 @@ class PersonaBuilder:
 
         return self
 
-    def from_yaml(self, file_path: str | Path) -> "PersonaBuilder":
+    @classmethod
+    def from_markdown(
+        cls,
+        file_path: str | Path,
+        override_metadata: dict[str, Any] | None = None,
+    ) -> "PersonaBuilder":
         """
-        Load persona definition from a YAML file.
+        Create PersonaBuilder from a Markdown file with YAML frontmatter metadata.
+
+        The Markdown format supports:
+        - YAML frontmatter (between --- delimiters) containing metadata
+        - Main content sections that map to persona attributes
+
+        Example Markdown format:
+        ```markdown
+        ---
+        name: technical_architect
+        llm_config:
+          model: gpt-4
+          temperature: 0.3
+        custom_field: value
+        ---
+
+        # Role
+        Senior Software Architect
+
+        # Goal
+        Review system designs and provide expert guidance
+
+        # Backstory
+        15+ years building distributed systems...
+
+        # Constraints
+        - Focus on maintainable solutions
+        - Evaluate scalability
+        ```
 
         Args:
-            file_path: Path to YAML configuration file
+            file_path: Path to Markdown file with persona definition
+            override_metadata: Optional dictionary to override/extend frontmatter metadata
 
         Returns:
-            PersonaBuilder: Self for method chaining
+            PersonaBuilder: New instance with data loaded from file
 
         Raises:
-            FileNotFoundError: If the YAML file doesn't exist
-            ValueError: If the YAML file is invalid or contains bad data
-            ImportError: If ruamel.yaml is not installed
+            FileNotFoundError: If the Markdown file doesn't exist
+            ValueError: If the Markdown format is invalid or name is missing
         """
-        try:
-            from ruamel.yaml import YAML
-        except ImportError as err:
-            raise ImportError(
-                "ruamel.yaml is required for YAML config files. Install with: pip install ruamel.yaml"
-            ) from err
+        return cls()._load_from_markdown(file_path, None, override_metadata)
+
+    def _load_from_markdown(
+        self,
+        file_path: str | Path,
+        name_override: str | None = None,
+        override_metadata: dict[str, Any] | None = None,
+    ) -> "PersonaBuilder":
+        """Internal method to load from markdown (supports both class method and instance method usage)."""
+        from .parsers import PersonaMarkdownParser
 
         file_path = Path(file_path)
 
+        # Sync file I/O
         if not file_path.exists():
-            raise FileNotFoundError(f"Persona YAML file not found: {file_path}")
+            raise FileNotFoundError(f"Persona Markdown file not found: {file_path}")
 
-        yaml = YAML()
-        try:
-            with file_path.open() as f:
-                config = yaml.load(f)
-        except Exception as e:
-            raise ValueError(f"Error loading YAML from {file_path}: {e}") from e
+        with file_path.open() as f:
+            content = f.read()
 
-        if config is None:
-            raise ValueError(f"YAML file {file_path} is empty or contains no valid data")
+        # Parse content using simplified parser
+        config = PersonaMarkdownParser.parse_persona_markdown(content)
 
-        return self.from_dict(config)
+        # Apply metadata overrides (business logic)
+        if override_metadata:
+            # Handle nested dictionary merging for llm_config
+            if "llm_config" in override_metadata and isinstance(config.get("llm_config"), dict):
+                merged_llm_config = config["llm_config"].copy()
+                merged_llm_config.update(override_metadata["llm_config"])
+                override_metadata = override_metadata.copy()
+                override_metadata["llm_config"] = merged_llm_config
+
+            # Apply other overrides
+            for key, value in override_metadata.items():
+                if key == "llm_config":
+                    config[key] = value  # Already handled above
+                elif key in config:
+                    config[key] = value
+                else:
+                    config["additional_kwargs"][key] = value
+
+        # Handle name resolution (business logic)
+        config["name"] = name_override or self.name or config.get("name") or file_path.stem
+
+        # Apply the configuration to this builder instance
+        self.name = config["name"]
+        self._role = config["role"]
+        self._goal = config["goal"]
+        self._backstory = config["backstory"]
+        self._constraints = config["constraints"]
+        self._llm_config = config["llm_config"]
+        self._description = config["description"]
+        self.additional_kwargs.update(config["additional_kwargs"])
+
+        return self
 
     def extend_goal(self, additional_goal: str) -> "PersonaBuilder":
         """Extend the existing goal with additional requirements."""
@@ -185,6 +285,29 @@ class PersonaBuilder:
         else:
             self._goal = additional_goal
         return self
+
+    @classmethod
+    def from_persona_dict(
+        cls, config_dict: dict[str, Any], name: str | None = None
+    ) -> "PersonaBuilder":
+        """
+        Create PersonaBuilder from a persona configuration dictionary.
+
+        This is the factory method equivalent of PersonaAgent.from_dict() for creating
+        agents from serialized persona data.
+
+        Args:
+            config_dict: Dictionary containing persona configuration (from PersonaAgent.to_dict())
+            name: Optional name override. If None, uses name from config_dict
+
+        Returns:
+            PersonaBuilder: New instance with data loaded from dictionary
+
+        Raises:
+            ValueError: If config_dict is not a valid dictionary
+        """
+        builder_name = name or config_dict.get("name")
+        return cls(builder_name).from_dict(config_dict)
 
     def validate(self) -> "PersonaBuilder":
         """Validate the current configuration before building.
@@ -207,8 +330,8 @@ class PersonaBuilder:
                 f"Constraints must be a list for persona '{self.name}', got {type(self._constraints)}"
             )
 
-        # Validate LLM config structure if provided
-        if self._llm_config is not None:
+        # Validate LLM config structure if provided (skip validation if False - means no LLM)
+        if self._llm_config is not None and self._llm_config is not False:
             if not isinstance(self._llm_config, dict):
                 errors.append(
                     f"LLM config must be a dictionary for persona '{self.name}', got {type(self._llm_config)}"
@@ -243,6 +366,7 @@ class PersonaBuilder:
         self.validate()
 
         # After validation, these should be guaranteed to exist
+        assert self.name is not None, "Name should be set after validation"
         assert self._role is not None, "Role should be set after validation"
         assert self._goal is not None, "Goal should be set after validation"
 

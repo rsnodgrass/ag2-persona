@@ -31,14 +31,14 @@ class TestPersonaAgent(unittest.TestCase):
             goal="Review code quality",
             backstory="10 years of experience",
             constraints=["Focus on Python", "Check security"],
-            llm_config={"model": "gpt-4", "temperature": 0.3},
+            llm_config=False,  # Disable LLM for testing
         )
 
         self.assertEqual(agent.role, "Code Reviewer")
         self.assertEqual(agent.backstory, "10 years of experience")
         self.assertEqual(len(agent.constraints), 2)
         self.assertIn("Focus on Python", agent.constraints)
-        self.assertEqual(agent.llm_config["model"], "gpt-4")
+        self.assertEqual(agent.llm_config, False)
 
     def test_system_message_composition(self):
         """Test that system message is properly composed."""
@@ -144,7 +144,7 @@ class TestPersonaAgent(unittest.TestCase):
             goal="Analyze datasets",
             backstory="PhD in Statistics",
             constraints=["Use pandas", "Create visualizations"],
-            llm_config={"model": "gpt-4", "temperature": 0.5},
+            llm_config=False,  # Disable LLM for testing
         )
 
         # Export to dict
@@ -153,10 +153,12 @@ class TestPersonaAgent(unittest.TestCase):
         self.assertEqual(config["name"], "analyst")
         self.assertEqual(config["role"], "Data Analyst")
         self.assertEqual(len(config["constraints"]), 2)
-        self.assertEqual(config["llm_config"]["model"], "gpt-4")
+        self.assertEqual(config["llm_config"], False)
 
-        # Create from dict
-        restored = PersonaAgent.from_dict(config)
+        # Create from dict using PersonaBuilder factory method
+        from ag2_persona import PersonaBuilder
+
+        restored = PersonaBuilder.from_persona_dict(config).build()
 
         self.assertEqual(restored.name, original.name)
         self.assertEqual(restored.role, original.role)

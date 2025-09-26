@@ -70,26 +70,24 @@ def create_construction_team() -> tuple[UserProxyAgent, GroupChatManager]:
     # Create set of construction specialists for evaluating projects
     # using PersonaBuilder along with AG2 best practices.
     project_manager = (
-        PersonaBuilder("project_manager")
-        .from_yaml("library/construction_project_manager.yaml")
+        PersonaBuilder.from_markdown("library/construction_project_manager.md")
+        .set_name("construction_pm")
         .llm_config(llm_config)
-        .with_human_input_never()
+        .human_input_never()
         .build()
     )
 
     architect_specialist = (
-        PersonaBuilder("architect_specialist")
-        .from_yaml("library/architectural_specialist.yaml")
+        PersonaBuilder.from_markdown("library/architect.md")
         .llm_config(llm_config)
-        .with_human_input_never()
+        .human_input_never()
         .build()
     )
 
     value_engineer = (
-        PersonaBuilder("value_engineer")
-        .from_yaml("library/value_engineering_specialist.yaml")
+        PersonaBuilder.from_markdown("library/value_engineer.md")
         .llm_config(llm_config)
-        .with_human_input_never()
+        .human_input_never()
         .description("Optimizes costs, identifies value engineering opportunities, maximizes ROI")
         .build()
     )
@@ -190,7 +188,7 @@ def main() -> None:
         print("\nThis likely means:")
         print("1. AG2 not properly installed with LLM support")
         print("2. No LLM configured or API key missing")
-        print("3. Missing ruamel.yaml: pip install ruamel.yaml")
+        print("3. Missing ruamel.yaml: pip install ruamel.yaml  # for YAML frontmatter parsing")
         print("\nInstallation options:")
         print('  OpenAI: pip install "ag2[openai]" && export OPENAI_API_KEY=key')
         print("  Ollama: pip install ag2 (local models, no API key needed)")

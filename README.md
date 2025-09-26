@@ -9,11 +9,11 @@
 
 [AG2 (AutoGen)](https://ag2.ai/) agents currently mix role, purpose, and context into a single unstructured `system_message`, which is fantastic flexibility but does not propose a common pattern for agents to authentically embody distinct personas. PersonaAgent enables agents to adopt rich, well-defined characters through explicit `role`, `goal`, and `backstory` components.
 
-**The real power comes from the PersonaBuilder YAML library pattern:** Load expert personas from configuration files, enabling domain experts to define agent behavior while developers handle runtime integration. This separation provides:
+**The real power comes from the PersonaBuilder Markdown library pattern:** Load expert personas from configuration files, enabling domain experts to define agent behavior while developers handle runtime integration. This separation provides:
 
 - **🔄 Reusability**: Share persona definitions across projects and teams
 - **🛠️ Maintainability**: Update agent behavior without touching code
-- **👥 Non-developer friendly**: Subject matter experts can edit YAML files directly
+- **👥 Non-developer friendly**: Subject matter experts can edit Markdown files directly
 - **📝 Version control**: Track persona evolution and collaborate on definitions
 - **⚡ Separation of concerns**: Stable persona definition vs variable runtime config
 
@@ -87,24 +87,24 @@ response = expert.generate_reply(messages=[{"content": "Analyze this sales data"
 
 ### Team Composition with PersonaBuilder
 
-Build multi-agent teams by loading expert personas from YAML files. This enables domain experts to define agent behavior while developers handle runtime integration:
+Build multi-agent teams by loading expert personas from Markdown files. This enables domain experts to define agent behavior while developers handle runtime integration:
 
 ```python
 from ag2_persona import PersonaBuilder
 from autogen import GroupChat, GroupChatManager
 
-# Load domain expert personas from YAML library (sync version)
+# Load domain expert personas from Markdown library (sync version)
 lead_scientist = (PersonaBuilder("lead_scientist")
-                 .from_yaml("library/research_team_lead.yaml")
+                 .from_markdown("library/research_team_lead.md")
                  .llm_config({"model": "gpt-4", "temperature": 0.7})
                  .build())
 
 data_analyst = (PersonaBuilder("data_analyst")
-               .from_yaml("library/senior_data_engineer.yaml")
+               .from_markdown("library/senior_data_engineer.md")
                .llm_config({"model": "gpt-4", "temperature": 0.5})
                .build())
 
-# Manual construction when YAML doesn't exist yet
+# Manual construction when Markdown doesn't exist yet
 lab_technician = (PersonaBuilder("lab_tech")
                  .role("Laboratory Technician")
                  .goal("Execute experiments and ensure quality control")
@@ -122,7 +122,7 @@ manager = GroupChatManager(groupchat)
 ```
 
 **Benefits:**
-- Domain experts edit YAML files, developers handle runtime
+- Domain experts edit Markdown files, developers handle runtime
 - Personas are shared across projects and teams
 - Updates don't require code changes
 - Version control tracks persona evolution
@@ -139,12 +139,12 @@ from autogen import GroupChat, GroupChatManager
 async def create_async_team():
     # Load personas asynchronously with true fluent chaining - no blocking I/O
     lead_agent = await (AsyncPersonaBuilder("lead_scientist")
-                       .from_yaml("library/research_team_lead.yaml")
+                       .from_markdown("library/research_team_lead.md")
                        .llm_config({"model": "gpt-4", "temperature": 0.7})
                        .build())
 
     analyst_agent = await (AsyncPersonaBuilder("data_analyst")
-                          .from_yaml("library/senior_data_engineer.yaml")
+                          .from_markdown("library/senior_data_engineer.md")
                           .llm_config({"model": "gpt-4", "temperature": 0.5})
                           .build())
 
@@ -155,7 +155,7 @@ async def main():
     team = await create_async_team()
     # Use team in async AG2 workflows...
 
-# YAML and async support now included by default
+# Markdown and async support now included by default
 ```
 
 ## API Reference
@@ -209,9 +209,9 @@ PersonaBuilder supports three construction patterns for different use cases:
 ```python
 from ag2_persona import PersonaBuilder
 
-# Option 1 (Recommended): Load expert personas from YAML library
+# Option 1 (Recommended): Load expert personas from Markdown library
 expert = (PersonaBuilder("bioinformatics_specialist")
-          .from_yaml("library/bioinformatics_specialist.yaml")
+          .from_markdown("library/bioinformatics_specialist.md")
           .llm_config({"model": "gpt-4", "temperature": 0.5})
           .build())
 
@@ -237,15 +237,15 @@ agent = (PersonaBuilder("bioinformatics_specialist")
          .llm_config({"model": "gpt-4", "temperature": 0.5})
          .build())
 
-# Async YAML loading (for async applications)
+# Async Markdown loading (for async applications)
 async def create_async_agent():
     return await (AsyncPersonaBuilder("bioinformatics_specialist")
-                 .from_yaml("library/bioinformatics_specialist.yaml")
+                 .from_markdown("library/bioinformatics_specialist.md")
                  .llm_config({"model": "gpt-4", "temperature": 0.5})
                  .build())
 ```
 
-**YAML and async support included by default.**
+**Markdown and async support included by default.**
 
 ## Migration Guide
 
@@ -307,7 +307,7 @@ agent = (PersonaBuilder("climate_scientist")
 
 ### Persona Library
 
-A comprehensive collection of pre-built persona agents across various domains is available in [`examples/library/`](examples/). These YAML files provide ready-to-use personas that you can load with PersonaBuilder:
+A comprehensive collection of pre-built persona agents across various domains is available in [`examples/library/`](examples/). These Markdown files provide ready-to-use personas that you can load with PersonaBuilder:
 
 - **Construction Team**: Project managers, architects, engineers for collaborative construction analysis
 - **Software Development**: Architects, data engineers, product managers for technical decision-making
@@ -321,7 +321,7 @@ See [`examples/README.md`](examples/README.md) for complete documentation.
 The [`examples/construction_team.py`](examples/construction_team.py) demonstrates a complete multi-agent system where:
 - **UserProxyAgent** acts as human client proxy presenting real construction challenges
 - **Three AI specialists** collaborate autonomously using GroupChat
-- **PersonaBuilder** loads agents from YAML configurations with runtime LLM setup
+- **PersonaBuilder** loads agents from Markdown configurations with runtime LLM setup
 
 This example showcases the hybrid conversation pattern: human problems → expert AI collaboration.
 
@@ -364,12 +364,12 @@ agent = PersonaAgent(
 <details>
 <summary><strong>What's the best way to load personas from configuration?</strong></summary>
 
-Use PersonaBuilder with YAML files for maximum flexibility:
+Use PersonaBuilder with Markdown files for maximum flexibility:
 
 ```python
-# Recommended: YAML library pattern
+# Recommended: Markdown library pattern
 agent = (PersonaBuilder("expert")
-         .from_yaml("library/domain_expert.yaml")
+         .from_markdown("library/domain_expert.md")
          .llm_config({"model": "gpt-4", "temperature": 0.7})
          .build())
 ```
