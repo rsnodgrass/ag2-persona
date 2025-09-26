@@ -92,6 +92,11 @@ class PersonaAgent(ConversableAgent):
         self.version = version
         self._metadata = metadata if metadata is not None else {}
 
+        # Store name for immutability control (before parent init)
+        self._persona_name = name
+        # Track that construction is complete to enable name immutability
+        self._construction_complete = False
+
         # Generate description for GroupChat if not provided
         if description is None:
             description = f"{self.role}: {self.goal}"
@@ -115,6 +120,9 @@ class PersonaAgent(ConversableAgent):
         super().__init__(
             name=name, system_message=system_message, description=description, **kwargs
         )
+
+        # Mark construction as complete to enable name immutability
+        self._construction_complete = True
 
     def _build_system_message(self) -> str:
         """
@@ -153,12 +161,15 @@ class PersonaAgent(ConversableAgent):
     @property
     def name(self) -> str:
         """Get the agent name (immutable after construction)."""
-        return str(super().name)
+        return self._persona_name
 
     @name.setter
     def name(self, value: str) -> None:
         """Prevent name modification after construction."""
-        raise AttributeError("PersonaAgent name is immutable after construction")
+        if getattr(self, "_construction_complete", False):
+            raise AttributeError("PersonaAgent name is immutable after construction")
+        # Allow setting during construction
+        self._persona_name = value
 
     @property
     def metadata(self) -> dict[str, Any]:

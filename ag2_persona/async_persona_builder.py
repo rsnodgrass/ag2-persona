@@ -104,6 +104,8 @@ class AsyncPersonaBuilder:
         self._constraints: list[str] = []
         self._llm_config: dict[str, Any] | bool | None = None
         self._description: str | None = None
+        self._version: str | None = None
+        self._metadata: dict[str, Any] = {}
         self.additional_kwargs: dict[str, Any] = {}
 
     def _record_sync(self, func: Callable[[], None]) -> None:
@@ -377,7 +379,11 @@ class AsyncPersonaBuilder:
             self._constraints = config["constraints"]
             self._llm_config = config["llm_config"]
             self._description = config["description"]
-            self.additional_kwargs.update(config["additional_kwargs"])
+            self._version = config.get("version")
+
+            # Apply extensible metadata
+            if config.get("metadata"):
+                self._metadata.update(config["metadata"])
 
         self._record_async(load_from_markdown)
         return self
@@ -443,6 +449,13 @@ class AsyncPersonaBuilder:
         assert self._role is not None, "Role should be set after validation"
         assert self._goal is not None, "Goal should be set after validation"
 
+        # Add version and metadata to kwargs if set
+        kwargs = self.additional_kwargs.copy()
+        if self._version is not None:
+            kwargs["version"] = self._version
+        if self._metadata:
+            kwargs["metadata"] = self._metadata
+
         return PersonaAgent(
             name=self.name,
             role=self._role,
@@ -451,7 +464,7 @@ class AsyncPersonaBuilder:
             constraints=self._constraints,
             description=self._description,
             llm_config=self._llm_config,
-            **self.additional_kwargs,
+            **kwargs,
         )
 
     def __repr__(self) -> str:
