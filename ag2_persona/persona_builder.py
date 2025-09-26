@@ -50,6 +50,8 @@ class PersonaBuilder:
         self._constraints: list[str] = []
         self._llm_config: dict[str, Any] | bool | None = None
         self._description: str | None = None
+        self._version: str | None = None
+        self._metadata: dict[str, Any] = {}
         self.additional_kwargs: dict[str, Any] = {}
 
     def set_name(self, name: str) -> "PersonaBuilder":
@@ -128,6 +130,34 @@ class PersonaBuilder:
         self._description = description
         return self
 
+    def update_metadata(self, metadata: dict[str, Any]) -> "PersonaBuilder":
+        """
+        Update the extensible metadata field with user-defined data.
+
+        This only updates the 'metadata' field, which is an extensible blob
+        for users to define custom data. Core persona fields (name, role, goal, etc.)
+        are NOT updated by this method.
+
+        Args:
+            metadata: Dictionary containing custom metadata to merge
+
+        Returns:
+            PersonaBuilder: Self for method chaining
+
+        Example:
+            >>> builder.update_metadata({
+            ...     "audit_info": {"created_by": "user@example.com"},
+            ...     "custom_field": "value",
+            ...     "project_data": {"id": 123, "name": "Project A"}
+            ... })
+        """
+        if not isinstance(metadata, dict):
+            raise ValueError("Metadata must be a dictionary")
+
+        # Deep merge the metadata
+        self._metadata.update(metadata)
+        return self
+
     def add_kwargs(self, **kwargs: Any) -> "PersonaBuilder":
         """Add additional ConversableAgent parameters."""
         self.additional_kwargs.update(kwargs)
@@ -157,6 +187,11 @@ class PersonaBuilder:
         self._goal = config_dict.get("goal")
         self._backstory = config_dict.get("backstory", "")
         self._constraints = config_dict.get("constraints", [])
+        self._version = config_dict.get("version")
+
+        # Load extensible metadata
+        if "metadata" in config_dict:
+            self._metadata.update(config_dict["metadata"])
 
         # Load name only if not already set (preserves instance name)
         if not self.name and "name" in config_dict:
@@ -174,11 +209,79 @@ class PersonaBuilder:
 
         return self
 
+    def with_markdown(
+        self,
+        content: str,
+    ) -> "PersonaBuilder":
+        """
+        Load persona configuration from Markdown content with YAML frontmatter.
+
+        The Markdown format supports:
+        - YAML frontmatter (between --- delimiters) containing metadata
+        - Main content sections that map to persona attributes
+
+        Example Markdown format:
+        ```markdown
+        ---
+        name: technical_architect
+        role: Senior Software Architect
+        goal: Review system designs and provide expert guidance
+        version: "2024-09-26"
+        llm_config:
+          model: gpt-4
+          temperature: 0.3
+        metadata:
+          project_id: 12345
+          team: architecture
+        ---
+
+        # Backstory
+        15+ years building distributed systems...
+        ```
+
+        Args:
+            content: Markdown content with persona definition
+
+        Returns:
+            PersonaBuilder: Self for method chaining
+
+        Raises:
+            ValueError: If the Markdown format is invalid
+        """
+        return self._load_from_markdown_content(content, None)
+
+    def with_markdown_file(
+        self,
+        file_path: str | Path,
+    ) -> "PersonaBuilder":
+        """
+        Load persona configuration from a Markdown file with YAML frontmatter.
+
+        Args:
+            file_path: Path to Markdown file with persona definition
+
+        Returns:
+            PersonaBuilder: Self for method chaining
+
+        Raises:
+            FileNotFoundError: If the Markdown file doesn't exist
+            ValueError: If the Markdown format is invalid
+        """
+        file_path = Path(file_path)
+
+        if not file_path.exists():
+            raise FileNotFoundError(f"Persona Markdown file not found: {file_path}")
+
+        with file_path.open() as f:
+            content = f.read()
+
+        # Use file stem as fallback for name resolution
+        return self._load_from_markdown_content(content, file_path.stem)
+
     @classmethod
     def from_markdown(
         cls,
         file_path: str | Path,
-        override_metadata: dict[str, Any] | None = None,
     ) -> "PersonaBuilder":
         """
         Create PersonaBuilder from a Markdown file with YAML frontmatter metadata.
@@ -191,29 +294,23 @@ class PersonaBuilder:
         ```markdown
         ---
         name: technical_architect
+        role: Senior Software Architect
+        goal: Review system designs and provide expert guidance
+        version: "2024-09-26"
         llm_config:
           model: gpt-4
           temperature: 0.3
-        custom_field: value
+        metadata:
+          project_id: 12345
+          team: architecture
         ---
-
-        # Role
-        Senior Software Architect
-
-        # Goal
-        Review system designs and provide expert guidance
 
         # Backstory
         15+ years building distributed systems...
-
-        # Constraints
-        - Focus on maintainable solutions
-        - Evaluate scalability
         ```
 
         Args:
             file_path: Path to Markdown file with persona definition
-            override_metadata: Optional dictionary to override/extend frontmatter metadata
 
         Returns:
             PersonaBuilder: New instance with data loaded from file
@@ -222,59 +319,73 @@ class PersonaBuilder:
             FileNotFoundError: If the Markdown file doesn't exist
             ValueError: If the Markdown format is invalid or name is missing
         """
-        return cls()._load_from_markdown(file_path, None, override_metadata)
+        return cls().with_markdown_file(file_path)
 
-    def _load_from_markdown(
+    def _resolve_name(self, config: dict[str, Any], fallback_name: str | None = None) -> str:
+        """
+        Resolve the final name using consistent priority rules.
+
+        Priority:
+        1. Existing builder name (self.name)
+        2. Name from frontmatter/config
+        3. Provided fallback name
+        4. Default fallback "unnamed_persona"
+
+        Args:
+            config: Parsed configuration dictionary
+            fallback_name: Optional fallback name (e.g., filename)
+
+        Returns:
+            Resolved name string
+        """
+        # Priority 1: Existing builder name
+        if self.name:
+            return self.name
+
+        # Priority 2: Name from frontmatter/config
+        if config.get("name"):
+            return str(config["name"])
+
+        # Priority 3: Provided fallback
+        if fallback_name:
+            return fallback_name
+
+        # Priority 4: Default fallback
+        return "unnamed_persona"
+
+    def _load_from_markdown_content(
         self,
-        file_path: str | Path,
-        name_override: str | None = None,
-        override_metadata: dict[str, Any] | None = None,
+        content: str,
+        fallback_name: str | None = None,
     ) -> "PersonaBuilder":
-        """Internal method to load from markdown (supports both class method and instance method usage)."""
+        """Internal method to load from markdown content."""
         from .parsers import PersonaMarkdownParser
-
-        file_path = Path(file_path)
-
-        # Sync file I/O
-        if not file_path.exists():
-            raise FileNotFoundError(f"Persona Markdown file not found: {file_path}")
-
-        with file_path.open() as f:
-            content = f.read()
 
         # Parse content using simplified parser
         config = PersonaMarkdownParser.parse_persona_markdown(content)
 
-        # Apply metadata overrides (business logic)
-        if override_metadata:
-            # Handle nested dictionary merging for llm_config
-            if "llm_config" in override_metadata and isinstance(config.get("llm_config"), dict):
-                merged_llm_config = config["llm_config"].copy()
-                merged_llm_config.update(override_metadata["llm_config"])
-                override_metadata = override_metadata.copy()
-                override_metadata["llm_config"] = merged_llm_config
+        # Handle name resolution using consistent logic
+        self.name = self._resolve_name(config, fallback_name)
 
-            # Apply other overrides
-            for key, value in override_metadata.items():
-                if key == "llm_config":
-                    config[key] = value  # Already handled above
-                elif key in config:
-                    config[key] = value
-                else:
-                    config["additional_kwargs"][key] = value
+        # Apply core persona fields directly
+        if config.get("role") is not None:
+            self._role = config["role"]
+        if config.get("goal") is not None:
+            self._goal = config["goal"]
+        if config.get("backstory") is not None:
+            self._backstory = config["backstory"]
+        if config.get("constraints") is not None:
+            self._constraints = config["constraints"]
+        if config.get("llm_config") is not None:
+            self._llm_config = config["llm_config"]
+        if config.get("description") is not None:
+            self._description = config["description"]
+        if config.get("version") is not None:
+            self._version = config["version"]
 
-        # Handle name resolution (business logic)
-        config["name"] = name_override or self.name or config.get("name") or file_path.stem
-
-        # Apply the configuration to this builder instance
-        self.name = config["name"]
-        self._role = config["role"]
-        self._goal = config["goal"]
-        self._backstory = config["backstory"]
-        self._constraints = config["constraints"]
-        self._llm_config = config["llm_config"]
-        self._description = config["description"]
-        self.additional_kwargs.update(config["additional_kwargs"])
+        # Apply extensible metadata
+        if config.get("metadata"):
+            self._metadata.update(config["metadata"])
 
         return self
 
@@ -370,6 +481,13 @@ class PersonaBuilder:
         assert self._role is not None, "Role should be set after validation"
         assert self._goal is not None, "Goal should be set after validation"
 
+        # Add version and metadata to kwargs if set
+        kwargs = self.additional_kwargs.copy()
+        if self._version is not None:
+            kwargs["version"] = self._version
+        if self._metadata:
+            kwargs["metadata"] = self._metadata
+
         return PersonaAgent(
             name=self.name,
             role=self._role,
@@ -378,7 +496,7 @@ class PersonaBuilder:
             constraints=self._constraints,
             description=self._description,
             llm_config=self._llm_config,
-            **self.additional_kwargs,
+            **kwargs,
         )
 
     def __repr__(self) -> str:

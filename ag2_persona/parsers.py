@@ -5,7 +5,9 @@ This module provides shared parsing logic to avoid code duplication between
 sync and async PersonaBuilder implementations.
 """
 
+import logging
 import re
+from datetime import date
 from typing import Any
 
 
@@ -65,25 +67,18 @@ class PersonaMarkdownParser:
             "llm_config": metadata.get("llm_config"),  # SPEC: frontmatter only
             "description": sections.get("description", "").strip()
             or metadata.get("description"),  # Can be in either
-            "additional_kwargs": {},
+            "version": metadata.get("version"),  # SPEC: frontmatter only
+            "metadata": metadata.get("metadata", {}),  # Extensible user-defined metadata
         }
 
         # Handle constraints from sections or metadata
         PersonaMarkdownParser._apply_constraints(sections, metadata, config)
 
-        # Store any additional metadata as kwargs
-        reserved_keys = {
-            "name",
-            "role",
-            "goal",
-            "backstory",
-            "constraints",
-            "llm_config",
-            "description",
-        }
-        for key, value in metadata.items():
-            if key not in reserved_keys:
-                config["additional_kwargs"][key] = value
+        # Handle version - warn and default to today's date if missing
+        PersonaMarkdownParser._handle_version(config, metadata)
+
+        # Note: Unknown frontmatter keys are ignored for security
+        # All custom data should go in the 'metadata:' field
 
         # Validate required fields for markdown loading
         PersonaMarkdownParser._validate_required_fields(config)
@@ -105,6 +100,21 @@ class PersonaMarkdownParser:
                 raise ValueError(f"Constraints in metadata must be a list, got {type(constraints)}")
         # Note: We intentionally ignore any # Constraints sections in the markdown body
         # to maintain the Spec vs Character separation
+
+    @staticmethod
+    def _handle_version(config: dict[str, Any], metadata: dict[str, Any]) -> None:
+        """Handle version field - warn and default to today's date if missing."""
+        if not config.get("version"):
+            # Generate today's date in YYYY-MM-DD format
+            today = date.today().strftime("%Y-%m-%d")
+            config["version"] = today
+
+            # Log warning about missing version
+            persona_name = config.get("name", "unknown")
+            logging.warning(
+                f"Version key missing for persona '{persona_name}'. "
+                f"Defaulting to today's date: {today}"
+            )
 
     @staticmethod
     def _validate_required_fields(config: dict[str, Any]) -> None:

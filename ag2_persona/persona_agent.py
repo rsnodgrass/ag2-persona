@@ -66,6 +66,8 @@ class PersonaAgent(ConversableAgent):
         backstory: str = "",
         constraints: list[str] | None = None,
         description: str | None = None,
+        version: str | None = None,
+        metadata: dict[str, Any] | None = None,
         **kwargs: Any,
     ):
         """
@@ -78,6 +80,8 @@ class PersonaAgent(ConversableAgent):
             backstory: Optional background, expertise, or context
             constraints: Optional list of rules or limitations
             description: Short description for GroupChat agent selection (defaults to role + goal)
+            version: Version identifier for auditing purposes
+            metadata: Optional extensible metadata dictionary for user-defined data
             **kwargs: Additional ConversableAgent parameters (llm_config, human_input_mode, etc.)
         """
         # Store structured components as properties
@@ -85,6 +89,8 @@ class PersonaAgent(ConversableAgent):
         self.goal = goal
         self.backstory = backstory
         self.constraints = constraints if constraints is not None else []
+        self.version = version
+        self._metadata = metadata if metadata is not None else {}
 
         # Generate description for GroupChat if not provided
         if description is None:
@@ -144,6 +150,44 @@ class PersonaAgent(ConversableAgent):
         """Set the human input mode."""
         self._human_input_mode = value
 
+    @property
+    def name(self) -> str:
+        """Get the agent name (immutable after construction)."""
+        return str(super().name)
+
+    @name.setter
+    def name(self, value: str) -> None:
+        """Prevent name modification after construction."""
+        raise AttributeError("PersonaAgent name is immutable after construction")
+
+    @property
+    def metadata(self) -> dict[str, Any]:
+        """
+        Get the extensible metadata dictionary.
+
+        Returns:
+            dict: Copy of the metadata dictionary to prevent external modification
+        """
+        return self._metadata.copy()
+
+    def update_metadata(self, metadata: dict[str, Any]) -> None:
+        """
+        Update the extensible metadata dictionary.
+
+        Args:
+            metadata: Dictionary containing metadata updates to merge
+
+        Example:
+            >>> agent.update_metadata({
+            ...     "audit_info": {"last_used": "2024-09-26"},
+            ...     "custom_field": "value"
+            ... })
+        """
+        if not isinstance(metadata, dict):
+            raise ValueError("Metadata must be a dictionary")
+
+        self._metadata.update(metadata)
+
     def update_goal(self, new_goal: str) -> None:
         """
         Dynamically update the agent's goal.
@@ -193,7 +237,7 @@ class PersonaAgent(ConversableAgent):
         Use PersonaBuilder.from_dict(agent.to_dict()) to recreate the agent.
 
         Returns:
-            dict: Persona configuration including llm_config
+            dict: Persona configuration including llm_config and version
         """
         return {
             "name": self.name,
@@ -202,6 +246,8 @@ class PersonaAgent(ConversableAgent):
             "backstory": self.backstory,
             "constraints": self.constraints,
             "llm_config": getattr(self, "llm_config", None),
+            "version": self.version,
+            "metadata": self._metadata,
         }
 
     def __repr__(self) -> str:
