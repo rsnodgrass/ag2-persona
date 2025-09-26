@@ -41,6 +41,9 @@ nav:
   - API Reference: api.md
   - Examples: examples.md
 
+exclude_docs: |
+  README.md
+
 plugins:
   - search
   - mkdocstrings:
