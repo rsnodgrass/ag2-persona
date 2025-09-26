@@ -31,7 +31,11 @@ jobs:
       run: uv python install ${{ matrix.python-version }}
 
     - name: Install dependencies
-      run: uv sync --extra dev
+      run: |
+        uv sync --extra dev
+        # Explicitly install pyautogen to ensure AG2 is available
+        uv pip install pyautogen
+        uv pip list | grep -E "(autogen|pyautogen)" || echo "AG2 not found in pip list"
 
     - name: Lint with ruff
       run: |

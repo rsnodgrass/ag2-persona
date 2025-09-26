@@ -15,7 +15,8 @@ except ImportError:
     # Fallback for development/testing without AG2
     class ConversableAgent:  # type: ignore[no-redef]
         def __init__(self, name: str, system_message: str, **kwargs: Any) -> None:
-            self.name = name
+            # Don't set name directly as subclasses may have custom property setters
+            object.__setattr__(self, "name", name)
             self.system_message = system_message
             self.llm_config = kwargs.get("llm_config", {})
 
